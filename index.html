@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ProfNote EPS</title>
+<title>SuiviProf EPS</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <meta name="theme-color" content="#0a1428">
@@ -73,6 +73,7 @@ tfoot .st0,tfoot .st1{z-index:5}
 .in.tx{width:190px;text-align:left}
 td select.in{width:auto;text-align:left}
 .calc{font-weight:800;color:var(--c3);min-width:64px}
+.mk{width:68px;min-width:68px;max-width:68px;white-space:normal;padding-inline:3px}.mk .ch{width:100%}.mk .btn.s{padding:4px 6px}
 .fold{color:var(--mut);font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis}
 .empty{border:2px dashed var(--bd);border-radius:18px;padding:28px;text-align:center;color:var(--mut);margin:14px 0}
 .empty b{color:var(--tx);display:block;font-size:1.05rem;margin-bottom:6px}
@@ -105,12 +106,12 @@ td select.in{width:auto;text-align:left}
 </head>
 <body>
 <header>
- <h1>ProfNote EPS</h1>
+ <h1>SuiviProf EPS</h1>
  <select id="cls" aria-label="Classe" hidden></select>
  <span class="sp"></span>
  <span class="msg" id="st"></span>
  <button class="btn b" id="bSync" hidden title="Enregistrer les saisies dans la base Mes Apps EPS">💾 <span class="hide-s">Mes Apps EPS</span></button>
- <button class="btn r" id="bXls" hidden title="Exporter la feuille ProfNoteEPS de la classe (.xlsx)">⬇ <span class="hide-s">.xlsx</span></button>
+ <button class="btn r" id="bXls" hidden title="Exporter la feuille SuiviProf de la classe (.xlsx)">⬇ <span class="hide-s">.xlsx</span></button>
  <button class="btn r" id="bSet" title="Réglages, liste élèves, sauvegarde">⚙️</button>
 </header>
 <main>
@@ -123,7 +124,7 @@ td select.in{width:auto;text-align:left}
 <script src="eps-core.js"></script>
 <script>
 {
-const APP='profnoteeps',LS='ProfNoteEPS_carnet_v1';
+const APP='suiviprof',LS='SuiviProfEPS_carnet_v1';
 const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -132,11 +133,11 @@ const frD=s=>{if(!s)return'';const d=new Date(s+'T12:00');return d.toLocaleDateS
 
 /* ───── Types de colonnes : chacun porte sa catégorie de bilan ───── */
 const TYPES={
- appel:{l:'Appel',i:'✅',cat:'Assiduité',k:'cycle',st:['','P','A','R'],lab:{P:'Présent',A:'Absent',R:'Retard'}},
- tenue:{l:'Oubli de tenue',i:'👕',cat:'Tenue',k:'toggle',on:'X',lab:'Oubli de tenue'},
- infirmerie:{l:'Infirmerie',i:'🩹',cat:'Infirmerie',k:'toggle',on:'I',lab:'Passage infirmerie'},
- dispense:{l:'Dispense',i:'🩺',cat:'Dispense',k:'cycle',st:['','DT','DP','IN'],lab:{DT:'Dispense totale',DP:'Dispense partielle',IN:'Inaptitude'}},
- comportement:{l:'Comportement',i:'⚖️',cat:'Comportement',k:'cycle',st:['','+','−','!'],lab:{'+':'Valorisation','−':'Remarque','!':'Incident'}},
+ appel:{l:'Appel',n:'Appel',i:'✅',cat:'Assiduité',k:'cycle',st:['','P','A','R'],lab:{P:'Présent',A:'Absent',R:'Retard'}},
+ tenue:{l:'Oubli de tenue',n:'Tenue',i:'👕',cat:'Tenue',k:'toggle',on:'X',lab:'Oubli de tenue'},
+ infirmerie:{l:'Infirmerie',n:'Infirm.',i:'🩹',cat:'Infirmerie',k:'toggle',on:'I',lab:'Passage infirmerie'},
+ dispense:{l:'Dispense',n:'Disp.',i:'🩺',cat:'Dispense',k:'cycle',st:['','DT','DP','IN'],lab:{DT:'Dispense totale',DP:'Dispense partielle',IN:'Inaptitude'}},
+ comportement:{l:'Comportement',n:'Comport.',i:'⚖️',cat:'Comportement',k:'cycle',st:['','+','−','!'],lab:{'+':'Valorisation','−':'Remarque','!':'Incident'}},
  equipe:{l:'Équipe',i:'🎽',cat:'Organisation',k:'select'},
  temps:{l:'Temps',i:'⏱️',cat:'Performance',k:'temps'},
  distance:{l:'Distance',i:'📏',cat:'Performance',k:'num',u:'m'},
@@ -145,11 +146,11 @@ const TYPES={
  texte:{l:'Texte / observation',i:'📝',cat:'Observation',k:'text'}};
 const CATS=['Assiduité','Tenue','Infirmerie','Dispense','Comportement','Organisation','Performance','Observation'];
 const OPS={somme:'Somme',moyenne:'Moyenne',min:'Minimum',max:'Maximum',diff:'Progression (2ᵉ − 1ʳᵉ)',vitesse:'Vitesse km/h (distance m ÷ temps)',libre:'Formule libre'};
-const NUMK=['temps','num','calc'];
+const NUMK=['temps','num','calc'],MARK=['appel','tenue','dispense','infirmerie','comportement'];
 
 /* ───── État : S.classes[classe] = {cycles:[], disp:[], tab} ───── */
 let S={v:1,classe:'',classes:{}},E=[];
-try{const j=JSON.parse(localStorage.getItem(LS));if(j&&j.classes)S=j}catch(e){}
+try{const j=JSON.parse(localStorage.getItem(LS)||localStorage.getItem('ProfNoteEPS_carnet_v1'));if(j&&j.classes)S=j}catch(e){}
 let syncT;
 function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}clearTimeout(syncT);syncT=setTimeout(()=>sync(true),2500)}
 const C=()=>S.classes[S.classe]||(S.classes[S.classe]={cycles:[],disp:[],tab:null});
@@ -192,7 +193,7 @@ function txt(c,s,col,eid){const t=T(col),v=raw(c,col,eid);
 /* ───── Rendu général ───── */
 function render(){const cl=[...new Set(E.map(e=>e.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
  const has=E.length>0;$('#cls').hidden=$('#tabs').hidden=$('#bSync').hidden=$('#bXls').hidden=!has;
- if(!has){$('#view').innerHTML=`<div class="empty"><b>Aucune liste d'élèves sur cet appareil</b>Ouvrez ProfNote EPS depuis le portail Mes Apps EPS (la liste Pronote y est partagée automatiquement),<br>ou chargez le fichier .xlsx / .csv exporté par Mes Apps EPS.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="list">📂 Charger la liste</button><button class="btn r" data-g="demo">🧪 Essayer avec une classe exemple</button></div></div>`;return}
+ if(!has){$('#view').innerHTML=`<div class="empty"><b>Aucune liste d'élèves sur cet appareil</b>Ouvrez SuiviProf EPS depuis le portail Mes Apps EPS (la liste Pronote y est partagée automatiquement),<br>ou chargez le fichier .xlsx / .csv exporté par Mes Apps EPS.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="list">📂 Charger la liste</button><button class="btn r" data-g="demo">🧪 Essayer avec une classe exemple</button></div></div>`;return}
  if(!cl.includes(S.classe))S.classe=cl[0];
  $('#cls').innerHTML=cl.map(c=>`<option ${c===S.classe?'selected':''}>${esc(c)}</option>`).join('');
  const k=C();if(k.tab!=='bilan'&&!k.cycles.some(c=>c.id===k.tab))k.tab=k.cycles[0]?.id||'bilan';
@@ -205,13 +206,13 @@ function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
  const nbS=c.seances.length;
  let h=`<div class="bar"><h2>${esc(c.nom)}</h2><span class="mut">${L.length} élèves · ${nbS} séance(s)</span><button class="btn s r" data-g="ecycle">✏️</button><span class="sp"></span>
   <button class="btn r s" data-g="disp">🩺 Dispenses (${C().disp.length})</button><button class="btn" data-g="seance">＋ Nouvelle séance</button></div>`;
- if(!nbS){v.innerHTML=h+`<div class="empty"><b>Ce cycle ne contient pas encore de séance</b>Créez une séance : l'application ouvre un groupe de colonnes daté (appel et tenue par défaut), auquel vous ajoutez les colonnes utiles.<div style="margin-top:14px"><button class="btn" data-g="seance">＋ Nouvelle séance</button></div></div>`;return}
+ if(!nbS){v.innerHTML=h+`<div class="empty"><b>Ce cycle ne contient pas encore de séance</b>Créez une séance : l'application ouvre un groupe de colonnes daté (appel, tenue, dispense, infirmerie et comportement par défaut), auquel vous ajoutez les colonnes utiles.<div style="margin-top:14px"><button class="btn" data-g="seance">＋ Nouvelle séance</button></div></div>`;return}
  const span=s=>s.fold||!s.cols.length?1:s.cols.length;
  h+=`<div class="grid"><table><thead><tr class="r1"><th class="st0" rowspan="2">Élève</th><th class="st1" rowspan="2">Classe</th>`
   +c.seances.map((s,i)=>`<th class="sh sg" colspan="${span(s)}"><b>S${i+1} · ${esc(frD(s.date))}<span class="ac"><button class="btn s r" data-a="addcol" data-s="${s.id}" title="Ajouter une colonne">＋</button><button class="btn s r" data-a="fold" data-s="${s.id}" title="${s.fold?'Déplier':'Replier'}">${s.fold?'▸':'▾'}</button><button class="btn s r" data-a="smenu" data-s="${s.id}" title="Séance">⋯</button></span></b><small>${esc(s.titre||'')}</small></th>`).join('')
   +`</tr><tr class="r2">`
   +c.seances.map(s=>s.fold||!s.cols.length?`<th class="sg">${s.fold?'<span class="fold">repliée</span>':`<button class="ch add" data-a="addcol" data-s="${s.id}">＋</button>`}</th>`
-   :s.cols.map((col,j)=>`<th class="${j?'':'sg'}"><button class="ch" data-a="col" data-s="${s.id}" data-c="${col.id}" title="Modifier la colonne">${T(col).i} ${esc(col.nom)}<small><span class="code">${col.code}</span>${col.type==='appel'?'':' '+esc(col.cat)}</small></button>${col.type==='appel'?`<br><button class="btn s b" data-a="allp" data-c="${col.id}">Tous P</button>`:''}</th>`).join('')).join('')
+   :s.cols.map((col,j)=>`<th class="${j?'':'sg'}${MARK.includes(col.type)?' mk':''}"><button class="ch" data-a="col" data-s="${s.id}" data-c="${col.id}" title="Modifier la colonne">${T(col).i} ${esc(col.nom)}<small><span class="code">${col.code}</span>${MARK.includes(col.type)?'':' '+esc(col.cat)}</small></button>${col.type==='appel'?`<br><button class="btn s b" data-a="allp" data-c="${col.id}">Tous P</button>`:''}</th>`).join('')).join('')
   +`</tr></thead><tbody>`
   +L.map(e=>`<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td><td class="st1">${esc(e.classe)}</td>`
    +c.seances.map(s=>s.fold||!s.cols.length?`<td class="sg fold">${esc(s.cols.map(col=>txtShort(c,s,col,e.id)).filter(Boolean).join(' · '))}</td>`:s.cols.map((col,j)=>cell(c,s,col,e,j)).join('')).join('')+'</tr>').join('')
@@ -222,7 +223,7 @@ function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
 function txtShort(c,s,col,eid){const t=T(col),v=raw(c,col,eid);if(col.type==='dispense'){return v||dispAuto(eid,s.date)}
  if(t.k==='cycle')return v||'';if(t.k==='toggle')return v?t.i:'';if(t.k==='text')return v?'📝':'';return txt(c,s,col,eid)}
 
-function cell(c,s,col,e,j){const t=T(col),v=raw(c,col,e.id),b=j?'':'sg',da=`data-c="${col.id}" data-e="${esc(e.id)}"`;
+function cell(c,s,col,e,j){const t=T(col),v=raw(c,col,e.id),b=(j?'':'sg')+(MARK.includes(col.type)?' mk':''),da=`data-c="${col.id}" data-e="${esc(e.id)}"`;
  if(t.k==='cycle'){let x=v||'',auto='';if(col.type==='dispense'&&!v){x=dispAuto(e.id,s.date);if(x)auto=' auto'}
   return `<td class="${b}"><button class="ck v${x==='!'?'I':x}${auto}" data-a="cyc" ${da} title="${esc(x?t.lab[x]:t.l)}${auto?' (période de dispense)':''}">${esc(x)}</button></td>`}
  if(t.k==='toggle')return `<td class="${b}"><button class="ck ${v?'vX':''}" data-a="tog" ${da} title="${esc(t.l)}">${v?t.on:''}</button></td>`;
@@ -239,7 +240,7 @@ function foot(c,L){return `<td class="st0">Classe</td><td class="st1"></td>`+c.s
   else if(t.k==='select'){const n={};L.forEach(e=>{const v=raw(c,col,e.id);if(v)n[v]=(n[v]||0)+1});x=Object.entries(n).map(([k,v])=>k+':'+v).join(' ')}
   else if(t.k==='text')x=L.filter(e=>raw(c,col,e.id)).length?L.filter(e=>raw(c,col,e.id)).length+' obs.':'';
   else{const ns=L.map(e=>numv(c,col,e.id)).filter(v=>v!=null);if(ns.length){const m=ns.reduce((a,b)=>a+b,0)/ns.length,bs=bestDir(col)==='min'?Math.min(...ns):Math.max(...ns);x=`moy ${fmt(col,m)}<br>meill. ${fmt(col,bs)}`}}
-  return `<td class="${j?'':'sg'}">${typeof x==='string'&&x.includes('<br>')?x:esc(x)}</td>`}).join('')).join('')}
+  return `<td class="${j?'':'sg'}${MARK.includes(col.type)?' mk':''}">${typeof x==='string'&&x.includes('<br>')?x:esc(x)}</td>`}).join('')).join('')}
 
 function refreshLive(){const c=cy(),L=pupils();document.querySelectorAll('[data-calc]').forEach(td=>{const col=allCols(c).find(x=>x.col.id===td.dataset.calc)?.col;if(col)td.textContent=fmt(col,calc(c,col,td.dataset.e))});
  const f=$('#tf');if(f)f.innerHTML=foot(c,L)}
@@ -299,7 +300,7 @@ function seanceModal(s){const c=cy(),prev=c.seances[c.seances.length-1];
  modal(`<h3>${s?'Modifier la séance':'Nouvelle séance'}</h3><form id="f"><label>Date<input type="date" name="date" required value="${s?.date||today()}"></label>
  <label>Intitulé (facultatif)<input name="titre" value="${esc(s?.titre||'')}" placeholder="ex : Test 6 min, situation d'apprentissage 2"></label>
  ${s?'':`${prev?`<label class="chk"><input type="checkbox" name="copy" checked> Reprendre les colonnes de la séance précédente (${esc(frD(prev.date))}, ${prev.cols.length} col.)</label>`:''}
- <div id="pre" ${prev?'hidden':''}><label>Colonnes créées d'office</label>${pre.map(k=>`<label class="chk"><input type="checkbox" name="t_${k}" ${k==='appel'||k==='tenue'?'checked':''}> ${TYPES[k].i} ${TYPES[k].l}</label>`).join('')}</div>`}
+ <div id="pre" ${prev?'hidden':''}><label>Colonnes créées d'office</label>${pre.map(k=>`<label class="chk"><input type="checkbox" name="t_${k}" checked> ${TYPES[k].i} ${TYPES[k].l}</label>`).join('')}</div>`}
  <div class="bar"><button class="btn">${s?'Enregistrer':'Créer la séance'}</button><button type="button" class="btn r" data-m="close">Annuler</button><span class="sp"></span>${s?'<button type="button" class="btn k" id="del">Supprimer</button>':''}</div></form>`,m=>{
  const f=m.querySelector('#f');if(f.copy)f.copy.onchange=()=>m.querySelector('#pre').hidden=f.copy.checked;
  f.onsubmit=ev=>{ev.preventDefault();if(s){s.date=f.date.value;s.titre=f.titre.value.trim()}else{
@@ -311,7 +312,7 @@ function seanceModal(s){const c=cy(),prev=c.seances[c.seances.length-1];
   save();close();render();const g=$('.grid');if(g&&!s)g.scrollLeft=g.scrollWidth};
  s&&confirmBtn(m.querySelector('#del'),()=>{c.seances=c.seances.filter(x=>x!==s);save();close();render()})})}
 
-function newCol(c,type,nom){const t=TYPES[type];return{id:uid(),code:'c'+(++c.seq),type,nom:nom||t.l,cat:t.cat,o:type==='distance'?{unite:'m'}:type==='equipe'?{liste:'A,B,C,D'}:type==='calcul'?{op:'somme',refs:[],dec:2,unite:''}:{}}}
+function newCol(c,type,nom){const t=TYPES[type];return{id:uid(),code:'c'+(++c.seq),type,nom:nom||t.n||t.l,cat:t.cat,o:type==='distance'?{unite:'m'}:type==='equipe'?{liste:'A,B,C,D'}:type==='calcul'?{op:'somme',refs:[],dec:2,unite:''}:{}}}
 
 function colModal(s,col){const c=cy();let type=col?.type||'texte';
  const others=()=>allCols(c).filter(x=>NUMK.includes(T(x.col).k)&&(!col||x.col.id!==col.id));
@@ -377,25 +378,25 @@ async function sync(quiet){const st=$('#st');try{let n=0;
   st.style.color='var(--ok)';st.textContent=quiet?'✓ enregistré':`✅ ${n} ligne(s) enregistrée(s) dans Mes Apps EPS`;E=await EPS.all();return true}
  catch(x){st.style.color='var(--ko)';st.textContent='❌ '+(x.message||x);return false}}
 async function exportX(){if(!await sync())return;const st=$('#st');
- try{const b=await EPS.exportXLSX({ids:pupils().map(e=>e.id),apps:[APP]});EPS.downloadXLSX(b,`ProfNoteEPS_${S.classe.replace(/[^\w-]+/g,'_')}_${today()}.xlsx`);st.textContent='⬇ Export lancé'}
+ try{const b=await EPS.exportXLSX({ids:pupils().map(e=>e.id),apps:[APP]});EPS.downloadXLSX(b,`SuiviProf_${S.classe.replace(/[^\w-]+/g,'_')}_${today()}.xlsx`);st.textContent='⬇ Export lancé'}
  catch(x){st.style.color='var(--ko)';st.textContent='❌ '+(x.message||x)}}
 async function demo(){const N=[['ELEVE1','Prénom1','F'],['ELEVE2','Prénom2','F'],['ELEVE3','Prénom3','M'],['ELEVE4','Prénom4','M'],['ELEVE5','Prénom5','M'],['ELEVE6','Prénom6','M'],['ELEVE7','Prénom7','F'],['ELEVE8','Prénom8','M'],['ELEVE9','Prénom9','M'],['ELEVE10','Prénom10','M'],['ELEVE11','Prénom11','F'],['ELEVE12','Prénom12','M'],['ELEVE13','Prénom13','F'],['ELEVE14','Prénom14','M'],['ELEVE15','Prénom15','F'],['ELEVE16','Prénom16','M']];
  for(const[nom,prenom,sexe]of N)await EPS.putEleve({nom,prenom,classe:'2NDE DEMO',sexe});E=await EPS.all();
  const cl='2NDE DEMO';S.classe=cl;if(!S.classes[cl]||!S.classes[cl].cycles.length){S.classes[cl]={cycles:[],disp:[],tab:null};const K=S.classes[cl],L=E.filter(e=>e.classe===cl);
   const c={id:uid(),nom:'Demi-fond',seq:0,seances:[],vals:{}};K.cycles.push(c);K.tab=c.id;
   const d=n=>{const x=new Date();x.setDate(x.getDate()-n);return iso(x)};
-  const s1={id:uid(),date:d(14),titre:'Test 6 min (VMA)',cols:[newCol(c,'appel'),newCol(c,'tenue'),newCol(c,'distance','Distance 6 min')]};
-  const v1=newCol(c,'calcul','VMA');v1.o={op:'libre',f:s1.cols[2].code+'/100',dec:1,unite:'km/h'};s1.cols.push(v1);
-  const s2={id:uid(),date:d(7),titre:'Fractionné 30/30',cols:[newCol(c,'appel'),newCol(c,'tenue'),newCol(c,'equipe','Groupe VMA'),newCol(c,'comportement'),newCol(c,'texte','Observation')]};
-  s2.cols[2].o.liste='Lents,Moyens,Rapides';
-  const s3={id:uid(),date:d(0),titre:'Test 1000 m',cols:[newCol(c,'appel'),newCol(c,'tenue'),newCol(c,'dispense'),newCol(c,'temps','Temps 1000 m')]};
-  const vit=newCol(c,'calcul','Vitesse 1000 m');vit.o={op:'libre',f:'1000/'+s3.cols[3].code+'*3.6',dec:1,unite:'km/h'};s3.cols.push(vit);
+  const s1={id:uid(),date:d(14),titre:'Test 6 min (VMA)',cols:[...MARK.map(k=>newCol(c,k)),newCol(c,'distance','Distance 6 min')]};
+  const v1=newCol(c,'calcul','VMA');v1.o={op:'libre',f:s1.cols[2].code+'/100',dec:1,unite:'km/h'};s1.cols.push(v1);const D1=s1.cols[5];v1.o.f=D1.code+'/100';
+  const s2={id:uid(),date:d(7),titre:'Fractionné 30/30',cols:[...MARK.map(k=>newCol(c,k)),newCol(c,'equipe','Groupe VMA'),newCol(c,'texte','Observation')]};
+  s2.cols[5].o.liste='Lents,Moyens,Rapides';
+  const s3={id:uid(),date:d(0),titre:'Test 1000 m',cols:[...MARK.map(k=>newCol(c,k)),newCol(c,'temps','Temps 1000 m')]};
+  const vit=newCol(c,'calcul','Vitesse 1000 m');vit.o={op:'libre',f:'1000/'+s3.cols[5].code+'*3.6',dec:1,unite:'km/h'};s3.cols.push(vit);
   c.seances.push(s1,s2,s3);
   L.forEach((e,i)=>{const r=c.vals[e.id]={};const dist=1150+((i*137)%600);
-   r[s1.cols[0].id]=i===4?'A':'P';if(i===4)delete r[s1.cols[2].id];else r[s1.cols[2].id]=dist;if(i%7===3)r[s1.cols[1].id]=1;
-   r[s2.cols[0].id]=i===9?'R':'P';r[s2.cols[2].id]=dist<1350?'Lents':dist<1550?'Moyens':'Rapides';if(i%5===1)r[s2.cols[3].id]='+';if(i===6)r[s2.cols[3].id]='−';
-   if(i===2)r[s2.cols[4].id]='Gère bien son allure, régulier.';if(i===6)r[s2.cols[4].id]='Part trop vite, s\'arrête à la 4ᵉ répétition.';
-   r[s3.cols[0].id]=i===11?'A':'P';if(i!==11&&i!==3)r[s3.cols[3].id]=Math.round((1000/(dist/100)*3.6*(0.92+((i*31)%10)/100))*10)/10;if(i%6===2)r[s3.cols[1].id]=1});
+   r[s1.cols[0].id]=i===4?'A':'P';if(i!==4)r[s1.cols[5].id]=dist;if(i%7===3)r[s1.cols[1].id]=1;
+   r[s2.cols[0].id]=i===9?'R':'P';r[s2.cols[5].id]=dist<1350?'Lents':dist<1550?'Moyens':'Rapides';if(i%5===1)r[s2.cols[4].id]='+';if(i===6)r[s2.cols[4].id]='−';if(i===8)r[s2.cols[3].id]=1;
+   if(i===2)r[s2.cols[6].id]='Gère bien son allure, régulier.';if(i===6)r[s2.cols[6].id]='Part trop vite, s\'arrête à la 4ᵉ répétition.';
+   r[s3.cols[0].id]=i===11?'A':'P';if(i!==11&&i!==3)r[s3.cols[5].id]=Math.round((1000/(dist/100)*3.6*(0.92+((i*31)%10)/100))*10)/10;if(i%6===2)r[s3.cols[1].id]=1});
   K.disp.push({eleve:L[3].id,type:'DT',du:d(2),au:d(-10),motif:'Certificat médical (entorse)'})}
  save();close();render()}
 
@@ -405,7 +406,7 @@ document.addEventListener('click',async e=>{const g=e.target.closest('[data-g]')
  if(!g)return;const k=g.dataset.g;
  if(k==='list')$('#fList').click();else if(k==='demo')demo();else if(k==='cycle')cycleModal();else if(k==='ecycle')cycleModal(cy());
  else if(k==='seance')seanceModal();else if(k==='disp')dispModal();
- else if(k==='json'){const b=new TextEncoder().encode(JSON.stringify(S,null,1));try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b],{type:'application/json'}));a.download='ProfNoteEPS_sauvegarde_'+today()+'.json';document.body.appendChild(a);a.click();a.remove();$('#sm').textContent='⬇ Sauvegarde lancée'}catch(x){$('#sm').textContent='❌ '+x.message}}
+ else if(k==='json'){const b=new TextEncoder().encode(JSON.stringify(S,null,1));try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b],{type:'application/json'}));a.download='SuiviProf_sauvegarde_'+today()+'.json';document.body.appendChild(a);a.click();a.remove();$('#sm').textContent='⬇ Sauvegarde lancée'}catch(x){$('#sm').textContent='❌ '+x.message}}
  else if(k==='rjson')$('#fJson').click()});
 $('#view').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,c=cy();
  const s=c&&c.seances.find(x=>x.id===b.dataset.s),col=c&&allCols(c).find(x=>x.col.id===b.dataset.c)?.col;

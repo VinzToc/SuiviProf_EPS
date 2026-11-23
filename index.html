@@ -6,22 +6,22 @@
 <title>SuiviProf EPS</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
-<meta name="theme-color" content="#0a1428">
+<meta name="theme-color" content="#071b2f">
 <style>
 /* VOICE  : carnet de terrain du prof d'EPS, sobre et rapide à remplir au bord du terrain
    IDEA   : le cahier de notes à colonnes, une double page par séance, un intercalaire par cycle
    PICTURE: la grille elle-même, en tête d'écran
    COLOUR / TYPE : charte Mes Apps EPS (nuit bleue, orange / bleu), system-ui
    LAYOUT : barre de classe, onglets de cycles, grille à colonnes figées (élève, classe) */
-:root{--bg:#0a1428;--tx:#eef3ff;--mut:rgba(238,243,255,.62);--glass:rgba(255,255,255,.07);--bd:rgba(255,255,255,.15);--c1:#ff8a1f;--c2:#2f9bff;--c3:#ffd27a;--ok:#6ff0a0;--ko:#ff8f8f;--cell:#101d38;--cell2:#132447;--head:#0e1a33;--w0:170px;--w1:76px}
+:root{--bg:#071b2f;--tx:#eef3ff;--mut:rgba(238,243,255,.62);--glass:rgba(255,255,255,.07);--bd:rgba(255,255,255,.15);--c1:#2ed3a0;--c2:#2f9bff;--c3:#9cf2c9;--ok:#6ff0a0;--ko:#ff8f8f;--cell:#0c2236;--cell2:#0f2a42;--head:#0a1e31;--w0:170px;--w1:76px}
 *{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
 body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);min-height:100vh;overflow-x:clip}
-body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 8% 4%,rgba(255,138,31,.18),transparent 55%),radial-gradient(ellipse at 94% 96%,rgba(47,155,255,.2),transparent 55%)}
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 8% 4%,rgba(46,211,160,.16),transparent 55%),radial-gradient(ellipse at 94% 96%,rgba(47,155,255,.2),transparent 55%)}
 header{display:flex;align-items:center;gap:12px;padding:12px 14px 6px;flex-wrap:wrap}
-h1{margin:0;font-size:1.35rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;background:linear-gradient(90deg,var(--c1),var(--c3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+h1{margin:0;font-size:1.35rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;background:linear-gradient(90deg,#4fb3ff,#2ed3a0 55%,#5fe07a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
 .sp{flex:1}.lg{width:42px;height:42px;border-radius:11px;flex:none}
 main{padding:0 14px 40px}
-.btn{border:0;border-radius:12px;padding:9px 14px;font:inherit;font-weight:800;font-size:.86rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,#ffa21f,#ff5e00);box-shadow:0 4px 14px #ff5e0040;min-height:40px;white-space:nowrap}
+.btn{border:0;border-radius:12px;padding:9px 14px;font:inherit;font-weight:800;font-size:.86rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,#16a9b0,#2fbf5c);box-shadow:0 4px 14px #16a9b040;min-height:40px;white-space:nowrap}
 .btn.b{background:linear-gradient(135deg,#2f9bff,#0a4fd0);box-shadow:0 4px 14px #0a4fd045}
 .btn.r{background:rgba(255,255,255,.08);border:1.5px solid var(--bd);box-shadow:none}
 .btn.k{background:linear-gradient(135deg,#ff6b6b,#c21e1e)}
@@ -35,7 +35,7 @@ label input,label select,label textarea{display:block;width:100%;margin-top:4px}
 /* onglets = intercalaires des cycles */
 .tabs{display:flex;gap:4px;overflow-x:auto;padding:6px 0 0;border-bottom:2px solid var(--c1);scrollbar-width:thin}
 .tab{flex:none;border:1.5px solid var(--bd);border-bottom:0;border-radius:12px 12px 0 0;padding:8px 14px;background:rgba(255,255,255,.05);color:var(--mut);font:inherit;font-weight:800;cursor:pointer;min-height:40px}
-.tab.on{background:linear-gradient(180deg,#ff8a1f,#e86a00);color:#fff;border-color:transparent}
+.tab.on{background:linear-gradient(135deg,#1976d2,#16b3a8 60%,#34c759);color:#fff;border-color:transparent}
 .tab.bil.on{background:linear-gradient(180deg,#2f9bff,#0a4fd0)}
 .tab.add{color:var(--c3);border-style:dashed}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
@@ -52,7 +52,7 @@ thead tr.r1 th{top:0;height:52px}thead tr.r2 th{top:52px}
 .st0{left:0;width:var(--w0);min-width:var(--w0);max-width:var(--w0);overflow:hidden;text-overflow:ellipsis}
 .st1{left:var(--w0);width:var(--w1);min-width:var(--w1);max-width:var(--w1);overflow:hidden;text-overflow:ellipsis;color:var(--mut);font-size:.76rem;box-shadow:3px 0 6px #0006}
 thead .st0,thead .st1{z-index:5}
-tfoot td{position:sticky;bottom:0;background:#0b1630!important;color:var(--c3);font-size:.74rem;z-index:3;border-top:2px solid var(--bd)}
+tfoot td{position:sticky;bottom:0;background:#08192a!important;color:var(--c3);font-size:.74rem;z-index:3;border-top:2px solid var(--bd)}
 tfoot .st0,tfoot .st1{z-index:5}
 .sg{border-left:3px solid var(--c1)!important}
 .sh{min-width:120px;text-align:left;padding:4px 8px}
@@ -66,9 +66,9 @@ tfoot .st0,tfoot .st1{z-index:5}
 .nm b{font-weight:800}
 .ck{width:100%;min-width:44px;min-height:36px;border:0;border-radius:8px;background:rgba(255,255,255,.04);color:var(--tx);font:inherit;font-weight:900;font-size:.95rem;cursor:pointer}
 .ck.auto{font-style:italic;opacity:.75;outline:1px dashed #6fb7ff}
-.vP,.v\+{background:#1d6b3f;color:#d9ffe7}.vA,.vI{background:#8f1d1d;color:#ffe0e0}.vR,.v−{background:#a35a00;color:#fff0d9}
+.vP,.v\+{background:#1d6b3f;color:#d9ffe7}.vA,.vI{background:#8f1d1d;color:#ffe0e0}.vR,.v−{background:#d4a514;color:#1d1a05}
 .vDT{background:#1d4f9f;color:#e0ecff}.vDP{background:#2c6fb8;color:#e0ecff}.vIN{background:#4b3a9f;color:#ece6ff}
-.vX{background:#8f4a1d;color:#fff}
+.vX{background:#7b52d6;color:#fff}
 .in{width:84px;padding:6px 7px;border-radius:8px;font-size:15px;text-align:right}
 .in.tx{width:190px;text-align:left}
 td select.in{width:auto;text-align:left}
@@ -85,16 +85,16 @@ td select.in{width:auto;text-align:left}
 .up{color:var(--ok);font-size:.72rem}.dn{color:var(--ko);font-size:.72rem}
 /* fenêtres */
 .ov{position:fixed;inset:0;background:#000a;display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:4vh 10px;overflow:auto}
-.mo{background:#0f1c38;border:1px solid var(--bd);border-radius:18px;padding:18px;width:min(560px,100%);box-shadow:0 20px 60px #000c}
+.mo{background:#0d2338;border:1px solid var(--bd);border-radius:18px;padding:18px;width:min(560px,100%);box-shadow:0 20px 60px #000c}
 .mo h3{margin:0 0 6px;font-size:1.05rem;color:var(--c3)}
 .tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
 .tg button{display:flex;gap:8px;align-items:center;text-align:left;border:1.5px solid var(--bd);border-radius:12px;padding:10px;background:rgba(255,255,255,.05);color:var(--tx);font:inherit;font-weight:700;cursor:pointer;min-height:48px}
-.tg button.on{border-color:var(--c1);background:rgba(255,138,31,.18)}
+.tg button.on{border-color:var(--c1);background:rgba(46,211,160,.18)}
 .chk{display:flex;gap:8px;align-items:center;color:var(--tx);font-weight:600;margin:6px 0}
 .chk input{width:20px;height:20px;margin:0}
 .refs{max-height:190px;overflow:auto;border:1px solid var(--bd);border-radius:10px;padding:4px 10px}
 .help{color:var(--mut);font-size:.78rem;margin:4px 0}
-.code{display:inline-block;background:#ffd27a22;color:var(--c3);border-radius:6px;padding:0 5px;font-weight:800;font-size:.75rem}
+.code{display:inline-block;background:#9cf2c922;color:var(--c3);border-radius:6px;padding:0 5px;font-weight:800;font-size:.75rem}
 .fi h4{margin:14px 0 4px;color:var(--c1);font-size:.85rem}
 .fi .se{border-left:3px solid var(--bd);padding:2px 0 2px 10px;margin:6px 0}
 .fi .se b{color:var(--c3)}
@@ -336,7 +336,7 @@ function caAgg(e,R){const o={};for(const c of C().cycles){if(!c.ca)continue;cons
   if(d||dispAuto(e.id,s.date))x.dis++;else if(ap==='P'||ap==='R')x.pr++;else if(ap==='A')x.ab++}}return o}
 function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().per[CO().eval==='S'?'S':'T'],R=K.bper!=null&&K.bper!=='an'?PS[+K.bper]:null,A=L.map(e=>[e,agg(e,R)]);
  const H=[['se','Séances'],['P','Présent'],['A','Absent'],['R','Retard'],['ten','👕 Tenue'],['inf','🩹 Infirm.'],['dis','🩺 Disp.'],['pl','⚖️ +'],['mo','⚖️ −'],['inc','⚠ Incid.'],['obs','📝 Obs.']];
- const mx=k=>Math.max(1,...A.map(x=>x[1][k])),warm={A:'255,90,90',R:'255,160,40',ten:'255,140,60',inf:'120,170,255',dis:'90,140,255',pl:'90,220,140',mo:'255,160,40',inc:'255,80,80',obs:'255,210,122'};
+ const mx=k=>Math.max(1,...A.map(x=>x[1][k])),warm={A:'255,90,90',R:'240,195,40',ten:'140,100,255',inf:'120,170,255',dis:'90,140,255',pl:'90,220,140',mo:'240,195,40',inc:'255,80,80',obs:'80,200,230'};
  let h=`<div class="bar"><h2>Bilan · ${esc(S.classe)}</h2><select id="bper" aria-label="Période"><option value="an">Année</option>${PS.map((p,i)=>`<option value="${i}" ${String(K.bper)===String(i)?'selected':''}>${esc(p.nom)}</option>`).join('')}</select><span class="mut">${R?'du '+esc(frD(R.du))+' au '+esc(frD(R.au))+' · ':''}${A[0]?.[1].se??0} séance(s) faite(s) · cliquez sur un élève pour sa synthèse</span></div>`;
  h+=`<div class="grid" style="max-height:none"><table class="bt"><thead><tr class="r1"><th class="st0">Élève</th><th class="st1">Classe</th>${H.map(x=>`<th>${x[1]}</th>`).join('')}<th>Assiduité</th></tr></thead><tbody>`
   +A.map(([e,a])=>{const pr=a.P+a.R+a.A?Math.round(100*(a.P+a.R)/(a.P+a.R+a.A)):null;
@@ -347,7 +347,7 @@ function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().pe
  const cyC={},CAk=Object.keys(CAS);K.cycles.forEach(c=>{if(c.ca)(cyC[c.ca]=cyC[c.ca]||[]).push(c)});
  h+=`<div class="card"><h3>Parcours par champ d'apprentissage</h3><div class="grid" style="max-height:none"><table><thead><tr class="r1"><th class="st0">Élève</th>${CAk.map(k=>`<th title="${esc(CAS[k])}" style="vertical-align:top">${k}<small style="display:block;white-space:normal;max-width:170px;font-weight:600;color:${cyC[k]?'var(--mut)':'var(--ko)'}">${cyC[k]?esc(cyC[k].map(c=>c.nom).join(', ')):'aucun cycle programmé'}</small></th>`).join('')}</tr></thead><tbody>`
   +L.map(e=>{const g=caAgg(e,R);return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td>`+CAk.map(k=>{const x=g[k];if(!x||!x.se)return'<td class="z">–</td>';const r=x.pr/x.se;
-   return `<td class="h" style="background:rgba(${r>=.75?'90,220,140':r>=.5?'255,160,40':'255,90,90'},.32)" title="${x.pr} séance(s) pratiquée(s) sur ${x.se}${x.ab?' · '+x.ab+' absence(s)':''}${x.dis?' · '+x.dis+' dispensée(s)':''}">${x.pr}/${x.se}${x.dis?` <small>🩺${x.dis}</small>`:''}</td>`}).join('')+'</tr>'}).join('')
+   return `<td class="h" style="background:rgba(${r>=.75?'90,220,140':r>=.5?'240,195,40':'255,90,90'},.32)" title="${x.pr} séance(s) pratiquée(s) sur ${x.se}${x.ab?' · '+x.ab+' absence(s)':''}${x.dis?' · '+x.dis+' dispensée(s)':''}">${x.pr}/${x.se}${x.dis?` <small>🩺${x.dis}</small>`:''}</td>`}).join('')+'</tr>'}).join('')
   +`</tbody></table></div><p class="help">Séances pratiquées (présent ou en retard, sans dispense) sur séances saisies dans les cycles de chaque CA. Vert : au moins 75 % · orange : au moins 50 % · rouge : moins de 50 %. Le CA5 ne concerne que le lycée.</p></div>`;
  /* performances : colonnes numériques regroupées par nom dans chaque cycle */
  for(const c of K.cycles){const G=new Map();allCols(c).forEach(x=>{if(NUMK.includes(T(x.col).k)&&(!R||x.s.date>=R.du&&x.s.date<=R.au)){const k=x.col.nom.trim().toLowerCase();if(!G.has(k))G.set(k,[]);G.get(k).push(x)}});

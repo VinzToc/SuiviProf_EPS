@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ProfNote EPS</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#0a1428">
+<style>
+/* VOICE  : carnet de terrain du prof d'EPS, sobre et rapide à remplir au bord du terrain
+   IDEA   : le cahier de notes à colonnes, une double page par séance, un intercalaire par cycle
+   PICTURE: la grille elle-même, en tête d'écran
+   COLOUR / TYPE : charte Mes Apps EPS (nuit bleue, orange / bleu), system-ui
+   LAYOUT : barre de classe, onglets de cycles, grille à colonnes figées (élève, classe) */
+:root{--bg:#0a1428;--tx:#eef3ff;--mut:rgba(238,243,255,.62);--glass:rgba(255,255,255,.07);--bd:rgba(255,255,255,.15);--c1:#ff8a1f;--c2:#2f9bff;--c3:#ffd27a;--ok:#6ff0a0;--ko:#ff8f8f;--cell:#101d38;--cell2:#132447;--head:#0e1a33;--w0:170px;--w1:76px}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);min-height:100vh;overflow-x:clip}
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 8% 4%,rgba(255,138,31,.18),transparent 55%),radial-gradient(ellipse at 94% 96%,rgba(47,155,255,.2),transparent 55%)}
+header{display:flex;align-items:center;gap:12px;padding:12px 14px 6px;flex-wrap:wrap}
+h1{margin:0;font-size:1.35rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;background:linear-gradient(90deg,var(--c1),var(--c3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.sp{flex:1}
+main{padding:0 14px 40px}
+.btn{border:0;border-radius:12px;padding:9px 14px;font:inherit;font-weight:800;font-size:.86rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,#ffa21f,#ff5e00);box-shadow:0 4px 14px #ff5e0040;min-height:40px;white-space:nowrap}
+.btn.b{background:linear-gradient(135deg,#2f9bff,#0a4fd0);box-shadow:0 4px 14px #0a4fd045}
+.btn.r{background:rgba(255,255,255,.08);border:1.5px solid var(--bd);box-shadow:none}
+.btn.k{background:linear-gradient(135deg,#ff6b6b,#c21e1e)}
+.btn.s{padding:4px 9px;min-height:30px;font-size:.78rem;border-radius:9px}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.4}
+select,input,textarea{padding:9px 11px;border-radius:11px;border:1.5px solid var(--bd);font:inherit;font-size:16px;background:rgba(0,0,0,.32);color:var(--tx)}
+select:focus,input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--c1);outline-offset:1px}
+label{display:block;font-weight:700;font-size:.8rem;color:var(--mut);margin:10px 0 4px}
+label input,label select,label textarea{display:block;width:100%;margin-top:4px}
+.msg{font-size:.82rem;font-weight:700;min-height:1.2em}
+/* onglets = intercalaires des cycles */
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:6px 0 0;border-bottom:2px solid var(--c1);scrollbar-width:thin}
+.tab{flex:none;border:1.5px solid var(--bd);border-bottom:0;border-radius:12px 12px 0 0;padding:8px 14px;background:rgba(255,255,255,.05);color:var(--mut);font:inherit;font-weight:800;cursor:pointer;min-height:40px}
+.tab.on{background:linear-gradient(180deg,#ff8a1f,#e86a00);color:#fff;border-color:transparent}
+.tab.bil.on{background:linear-gradient(180deg,#2f9bff,#0a4fd0)}
+.tab.add{color:var(--c3);border-style:dashed}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.bar h2{margin:0;font-size:1rem;font-weight:900}
+.bar .mut{color:var(--mut);font-size:.82rem}
+/* grille */
+.grid{overflow:auto;max-height:calc(100vh - 205px);border:1px solid var(--bd);border-radius:14px;background:var(--cell)}
+table{border-collapse:separate;border-spacing:0;font-size:.86rem}
+th,td{border-right:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);padding:3px 5px;text-align:center;white-space:nowrap;background:var(--cell)}
+tbody tr:nth-child(even) td{background:var(--cell2)}
+thead th{position:sticky;background:var(--head);z-index:3}
+thead tr.r1 th{top:0;height:52px}thead tr.r2 th{top:52px}
+.st0,.st1{position:sticky;z-index:2;text-align:left}
+.st0{left:0;width:var(--w0);min-width:var(--w0);max-width:var(--w0);overflow:hidden;text-overflow:ellipsis}
+.st1{left:var(--w0);width:var(--w1);min-width:var(--w1);max-width:var(--w1);overflow:hidden;text-overflow:ellipsis;color:var(--mut);font-size:.76rem;box-shadow:3px 0 6px #0006}
+thead .st0,thead .st1{z-index:5}
+tfoot td{position:sticky;bottom:0;background:#0b1630!important;color:var(--c3);font-size:.74rem;z-index:3;border-top:2px solid var(--bd)}
+tfoot .st0,tfoot .st1{z-index:5}
+.sg{border-left:3px solid var(--c1)!important}
+.sh{min-width:120px;text-align:left;padding:4px 8px}
+.sh b{display:block;font-size:.9rem;color:var(--c3)}
+.sh small{color:var(--mut);display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.sh .ac{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+.ch{font:inherit;font-size:.78rem;font-weight:700;color:var(--tx);background:none;border:0;cursor:pointer;padding:4px 2px;line-height:1.15}
+.ch small{display:block;color:var(--mut);font-weight:600;font-size:.68rem}
+.ch.add{color:var(--c3);font-size:1.1rem;padding:6px 10px}
+.nm{font:inherit;color:var(--tx);background:none;border:0;cursor:pointer;text-align:left;padding:6px 2px;width:100%;overflow:hidden;text-overflow:ellipsis}
+.nm b{font-weight:800}
+.ck{width:100%;min-width:44px;min-height:36px;border:0;border-radius:8px;background:rgba(255,255,255,.04);color:var(--tx);font:inherit;font-weight:900;font-size:.95rem;cursor:pointer}
+.ck.auto{font-style:italic;opacity:.75;outline:1px dashed #6fb7ff}
+.vP,.v\+{background:#1d6b3f;color:#d9ffe7}.vA,.vI{background:#8f1d1d;color:#ffe0e0}.vR,.v−{background:#a35a00;color:#fff0d9}
+.vDT{background:#1d4f9f;color:#e0ecff}.vDP{background:#2c6fb8;color:#e0ecff}.vIN{background:#4b3a9f;color:#ece6ff}
+.vX{background:#8f4a1d;color:#fff}
+.in{width:84px;padding:6px 7px;border-radius:8px;font-size:15px;text-align:right}
+.in.tx{width:190px;text-align:left}
+td select.in{width:auto;text-align:left}
+.calc{font-weight:800;color:var(--c3);min-width:64px}
+.fold{color:var(--mut);font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.empty{border:2px dashed var(--bd);border-radius:18px;padding:28px;text-align:center;color:var(--mut);margin:14px 0}
+.empty b{color:var(--tx);display:block;font-size:1.05rem;margin-bottom:6px}
+/* bilan */
+.bt td.z{color:rgba(255,255,255,.25)}
+.bt td.h{font-weight:900}
+.card{background:var(--glass);border:1px solid var(--bd);border-radius:16px;padding:14px;margin:12px 0}
+.card h3{margin:0 0 8px;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--c1)}
+.up{color:var(--ok);font-size:.72rem}.dn{color:var(--ko);font-size:.72rem}
+/* fenêtres */
+.ov{position:fixed;inset:0;background:#000a;display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:4vh 10px;overflow:auto}
+.mo{background:#0f1c38;border:1px solid var(--bd);border-radius:18px;padding:18px;width:min(560px,100%);box-shadow:0 20px 60px #000c}
+.mo h3{margin:0 0 6px;font-size:1.05rem;color:var(--c3)}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
+.tg button{display:flex;gap:8px;align-items:center;text-align:left;border:1.5px solid var(--bd);border-radius:12px;padding:10px;background:rgba(255,255,255,.05);color:var(--tx);font:inherit;font-weight:700;cursor:pointer;min-height:48px}
+.tg button.on{border-color:var(--c1);background:rgba(255,138,31,.18)}
+.chk{display:flex;gap:8px;align-items:center;color:var(--tx);font-weight:600;margin:6px 0}
+.chk input{width:20px;height:20px;margin:0}
+.refs{max-height:190px;overflow:auto;border:1px solid var(--bd);border-radius:10px;padding:4px 10px}
+.help{color:var(--mut);font-size:.78rem;margin:4px 0}
+.code{display:inline-block;background:#ffd27a22;color:var(--c3);border-radius:6px;padding:0 5px;font-weight:800;font-size:.75rem}
+.fi h4{margin:14px 0 4px;color:var(--c1);font-size:.85rem}
+.fi .se{border-left:3px solid var(--bd);padding:2px 0 2px 10px;margin:6px 0}
+.fi .se b{color:var(--c3)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips span{background:rgba(255,255,255,.08);border-radius:20px;padding:3px 10px;font-size:.8rem;font-weight:700}
+.dl{width:100%;font-size:.85rem}.dl td{text-align:left;white-space:normal}
+@media(max-width:600px){:root{--w0:128px;--w1:56px}header{padding:10px}h1{font-size:1.1rem}.hide-s{display:none}.grid{max-height:calc(100vh - 235px)}}
+</style>
+</head>
+<body>
+<header>
+ <h1>ProfNote EPS</h1>
+ <select id="cls" aria-label="Classe" hidden></select>
+ <span class="sp"></span>
+ <span class="msg" id="st"></span>
+ <button class="btn b" id="bSync" hidden title="Enregistrer les saisies dans la base Mes Apps EPS">💾 <span class="hide-s">Mes Apps EPS</span></button>
+ <button class="btn r" id="bXls" hidden title="Exporter la feuille ProfNoteEPS de la classe (.xlsx)">⬇ <span class="hide-s">.xlsx</span></button>
+ <button class="btn r" id="bSet" title="Réglages, liste élèves, sauvegarde">⚙️</button>
+</header>
+<main>
+ <nav class="tabs" id="tabs" hidden></nav>
+ <section id="view"></section>
+</main>
+<div class="ov" id="ov" hidden><div class="mo" id="mo"></div></div>
+<input type="file" id="fList" accept=".csv,.xlsx" hidden>
+<input type="file" id="fJson" accept=".json" hidden>
+<script src="eps-core.js"></script>
+<script>
+{
+const APP='profnoteeps',LS='ProfNoteEPS_carnet_v1';
+const $=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>iso(new Date());
+const frD=s=>{if(!s)return'';const d=new Date(s+'T12:00');return d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'})};
+
+/* ───── Types de colonnes : chacun porte sa catégorie de bilan ───── */
+const TYPES={
+ appel:{l:'Appel',i:'✅',cat:'Assiduité',k:'cycle',st:['','P','A','R'],lab:{P:'Présent',A:'Absent',R:'Retard'}},
+ tenue:{l:'Oubli de tenue',i:'👕',cat:'Tenue',k:'toggle',on:'X',lab:'Oubli de tenue'},
+ infirmerie:{l:'Infirmerie',i:'🩹',cat:'Infirmerie',k:'toggle',on:'I',lab:'Passage infirmerie'},
+ dispense:{l:'Dispense',i:'🩺',cat:'Dispense',k:'cycle',st:['','DT','DP','IN'],lab:{DT:'Dispense totale',DP:'Dispense partielle',IN:'Inaptitude'}},
+ comportement:{l:'Comportement',i:'⚖️',cat:'Comportement',k:'cycle',st:['','+','−','!'],lab:{'+':'Valorisation','−':'Remarque','!':'Incident'}},
+ equipe:{l:'Équipe',i:'🎽',cat:'Organisation',k:'select'},
+ temps:{l:'Temps',i:'⏱️',cat:'Performance',k:'temps'},
+ distance:{l:'Distance',i:'📏',cat:'Performance',k:'num',u:'m'},
+ nombre:{l:'Nombre / note',i:'🔢',cat:'Performance',k:'num',u:''},
+ calcul:{l:'Calcul',i:'🧮',cat:'Performance',k:'calc'},
+ texte:{l:'Texte / observation',i:'📝',cat:'Observation',k:'text'}};
+const CATS=['Assiduité','Tenue','Infirmerie','Dispense','Comportement','Organisation','Performance','Observation'];
+const OPS={somme:'Somme',moyenne:'Moyenne',min:'Minimum',max:'Maximum',diff:'Progression (2ᵉ − 1ʳᵉ)',vitesse:'Vitesse km/h (distance m ÷ temps)',libre:'Formule libre'};
+const NUMK=['temps','num','calc'];
+
+/* ───── État : S.classes[classe] = {cycles:[], disp:[], tab} ───── */
+let S={v:1,classe:'',classes:{}},E=[];
+try{const j=JSON.parse(localStorage.getItem(LS));if(j&&j.classes)S=j}catch(e){}
+let syncT;
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}clearTimeout(syncT);syncT=setTimeout(()=>sync(true),2500)}
+const C=()=>S.classes[S.classe]||(S.classes[S.classe]={cycles:[],disp:[],tab:null});
+const cy=()=>C().cycles.find(c=>c.id===C().tab);
+const pupils=()=>E.filter(e=>e.classe===S.classe).sort((a,b)=>(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr',{numeric:true}));
+const allCols=c=>c.seances.flatMap((s,si)=>s.cols.map(col=>({col,s,si})));
+const T=col=>TYPES[col.type];
+const raw=(c,col,eid)=>((c.vals||{})[eid]||{})[col.id];
+function setVal(eid,colId,v){const c=cy();c.vals=c.vals||{};const r=c.vals[eid]=c.vals[eid]||{};if(v===''||v==null)delete r[colId];else r[colId]=v;save()}
+const dispAuto=(eid,date)=>{const p=C().disp.find(d=>d.eleve===eid&&d.du<=date&&(!d.au||date<=d.au));return p?p.type:''};
+
+/* ───── Nombres, temps, calculs ───── */
+const parseNum=s=>{const n=parseFloat(String(s).replace(',','.'));return isFinite(n)?n:null};
+function parseT(s){s=String(s).trim();if(!s)return null;s=s.replace(/,/g,'.').replace(/[’']/g,':').replace(/["”″]/g,'.').replace(/m(in)?/i,':').replace(/s/i,'.').replace(/\.+$/,'');
+ const p=s.split(':');if(p.some(x=>x!==''&&!/^\d*\.?\d*$/.test(x)))return null;const v=p.reduce((a,x)=>a*60+(parseFloat(x)||0),0);return isFinite(v)?v:null}
+const fmtT=v=>{const m=Math.floor(v/60),r=v-m*60;return m?`${m}:${r.toFixed(2).padStart(5,'0')}`:`${r.toFixed(2)} s`};
+function fmt(col,v){if(v==null||v==='')return'';if(col.type==='temps'||(col.type==='calcul'&&col.o.unite==='temps'))return fmtT(v);
+ const d=col.type==='calcul'?(col.o.dec??2):(col.o.dec??2),n=Math.round(v*10**d)/10**d;
+ const u=col.type==='calcul'?col.o.unite:col.o.unite;return n.toLocaleString('fr-FR')+(u&&u!=='temps'?' '+u:'')+(col.o.max?' /'+col.o.max:'')}
+function numv(c,col,eid,d=0){if(col.type==='calcul')return calc(c,col,eid,d);const v=raw(c,col,eid);return typeof v==='number'?v:null}
+function calc(c,col,eid,d=0){if(d>8)return null;const o=col.o,cols=allCols(c);
+ const get=code=>{const r=cols.find(x=>x.col.code===code);return !r||r.col.id===col.id?null:numv(c,r.col,eid,d+1)};
+ let v=null;
+ if(o.op==='libre'){let miss=false;let ex=(o.f||'').replace(/\bc\d+\b/gi,m=>{const x=get(m.toLowerCase());if(x==null)miss=true;return'('+(x??0)+')'});
+  if(miss||!ex.trim())return null;const F=/\b(min|max|round|abs|sqrt|pow|floor|ceil)\b/g;
+  if(!/^[\d.+\-*/()\s,eE]*$/.test(ex.replace(F,'')))return null;
+  try{v=Function('M','"use strict";return('+ex.replace(F,'M.$1')+')')(Math)}catch(e){return null}}
+ else{const xs=(o.refs||[]).map(get),ok=xs.filter(x=>x!=null);
+  if(o.op==='diff'||o.op==='vitesse'){if(xs.length<2||xs[0]==null||xs[1]==null)return null;v=o.op==='diff'?xs[1]-xs[0]:(xs[1]?xs[0]/xs[1]*3.6:null)}
+  else{if(!ok.length)return null;v=o.op==='somme'?ok.reduce((a,b)=>a+b,0):o.op==='moyenne'?ok.reduce((a,b)=>a+b,0)/ok.length:o.op==='min'?Math.min(...ok):Math.max(...ok)}}
+ return typeof v==='number'&&isFinite(v)?v:null}
+const bestDir=col=>col.o.best||(col.type==='temps'?'min':'max');
+
+/* Valeur lisible d'une cellule (bilan, fiche, export) */
+function txt(c,s,col,eid){const t=T(col),v=raw(c,col,eid);
+ if(col.type==='dispense'){const x=v||dispAuto(eid,s.date);return x?t.lab[x]:''}
+ if(t.k==='cycle')return v?t.lab[v]:'';if(t.k==='toggle')return v?t.lab:'';
+ if(NUMK.includes(t.k))return fmt(col,numv(c,col,eid));return v||''}
+
+/* ───── Rendu général ───── */
+function render(){const cl=[...new Set(E.map(e=>e.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
+ const has=E.length>0;$('#cls').hidden=$('#tabs').hidden=$('#bSync').hidden=$('#bXls').hidden=!has;
+ if(!has){$('#view').innerHTML=`<div class="empty"><b>Aucune liste d'élèves sur cet appareil</b>Ouvrez ProfNote EPS depuis le portail Mes Apps EPS (la liste Pronote y est partagée automatiquement),<br>ou chargez le fichier .xlsx / .csv exporté par Mes Apps EPS.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="list">📂 Charger la liste</button><button class="btn r" data-g="demo">🧪 Essayer avec une classe exemple</button></div></div>`;return}
+ if(!cl.includes(S.classe))S.classe=cl[0];
+ $('#cls').innerHTML=cl.map(c=>`<option ${c===S.classe?'selected':''}>${esc(c)}</option>`).join('');
+ const k=C();if(k.tab!=='bilan'&&!k.cycles.some(c=>c.id===k.tab))k.tab=k.cycles[0]?.id||'bilan';
+ $('#tabs').innerHTML=k.cycles.map(c=>`<button class="tab ${c.id===k.tab?'on':''}" data-t="${c.id}">${esc(c.nom)}</button>`).join('')
+  +`<button class="tab add" data-g="cycle">＋ Cycle</button><span class="sp"></span><button class="tab bil ${k.tab==='bilan'?'on':''}" data-t="bilan">📊 Bilan</button>`;
+ k.tab==='bilan'?renderBilan():renderCycle()}
+
+function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
+ const g=v.querySelector('.grid'),sc=g?[g.scrollLeft,g.scrollTop]:null;
+ const nbS=c.seances.length;
+ let h=`<div class="bar"><h2>${esc(c.nom)}</h2><span class="mut">${L.length} élèves · ${nbS} séance(s)</span><button class="btn s r" data-g="ecycle">✏️</button><span class="sp"></span>
+  <button class="btn r s" data-g="disp">🩺 Dispenses (${C().disp.length})</button><button class="btn" data-g="seance">＋ Nouvelle séance</button></div>`;
+ if(!nbS){v.innerHTML=h+`<div class="empty"><b>Ce cycle ne contient pas encore de séance</b>Créez une séance : l'application ouvre un groupe de colonnes daté (appel et tenue par défaut), auquel vous ajoutez les colonnes utiles.<div style="margin-top:14px"><button class="btn" data-g="seance">＋ Nouvelle séance</button></div></div>`;return}
+ const span=s=>s.fold||!s.cols.length?1:s.cols.length;
+ h+=`<div class="grid"><table><thead><tr class="r1"><th class="st0" rowspan="2">Élève</th><th class="st1" rowspan="2">Classe</th>`
+  +c.seances.map((s,i)=>`<th class="sh sg" colspan="${span(s)}"><b>S${i+1} · ${esc(frD(s.date))}<span class="ac"><button class="btn s r" data-a="addcol" data-s="${s.id}" title="Ajouter une colonne">＋</button><button class="btn s r" data-a="fold" data-s="${s.id}" title="${s.fold?'Déplier':'Replier'}">${s.fold?'▸':'▾'}</button><button class="btn s r" data-a="smenu" data-s="${s.id}" title="Séance">⋯</button></span></b><small>${esc(s.titre||'')}</small></th>`).join('')
+  +`</tr><tr class="r2">`
+  +c.seances.map(s=>s.fold||!s.cols.length?`<th class="sg">${s.fold?'<span class="fold">repliée</span>':`<button class="ch add" data-a="addcol" data-s="${s.id}">＋</button>`}</th>`
+   :s.cols.map((col,j)=>`<th class="${j?'':'sg'}"><button class="ch" data-a="col" data-s="${s.id}" data-c="${col.id}" title="Modifier la colonne">${T(col).i} ${esc(col.nom)}<small><span class="code">${col.code}</span>${col.type==='appel'?'':' '+esc(col.cat)}</small></button>${col.type==='appel'?`<br><button class="btn s b" data-a="allp" data-c="${col.id}">Tous P</button>`:''}</th>`).join('')).join('')
+  +`</tr></thead><tbody>`
+  +L.map(e=>`<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td><td class="st1">${esc(e.classe)}</td>`
+   +c.seances.map(s=>s.fold||!s.cols.length?`<td class="sg fold">${esc(s.cols.map(col=>txtShort(c,s,col,e.id)).filter(Boolean).join(' · '))}</td>`:s.cols.map((col,j)=>cell(c,s,col,e,j)).join('')).join('')+'</tr>').join('')
+  +`</tbody><tfoot><tr id="tf">${foot(c,L)}</tr></tfoot></table></div>`;
+ v.innerHTML=h;
+ if(sc){const n=v.querySelector('.grid');n.scrollLeft=sc[0];n.scrollTop=sc[1]}}
+
+function txtShort(c,s,col,eid){const t=T(col),v=raw(c,col,eid);if(col.type==='dispense'){return v||dispAuto(eid,s.date)}
+ if(t.k==='cycle')return v||'';if(t.k==='toggle')return v?t.i:'';if(t.k==='text')return v?'📝':'';return txt(c,s,col,eid)}
+
+function cell(c,s,col,e,j){const t=T(col),v=raw(c,col,e.id),b=j?'':'sg',da=`data-c="${col.id}" data-e="${esc(e.id)}"`;
+ if(t.k==='cycle'){let x=v||'',auto='';if(col.type==='dispense'&&!v){x=dispAuto(e.id,s.date);if(x)auto=' auto'}
+  return `<td class="${b}"><button class="ck v${x==='!'?'I':x}${auto}" data-a="cyc" ${da} title="${esc(x?t.lab[x]:t.l)}${auto?' (période de dispense)':''}">${esc(x)}</button></td>`}
+ if(t.k==='toggle')return `<td class="${b}"><button class="ck ${v?'vX':''}" data-a="tog" ${da} title="${esc(t.l)}">${v?t.on:''}</button></td>`;
+ if(t.k==='select'){const o=(col.o.liste||'').split(',').map(x=>x.trim()).filter(Boolean);
+  return `<td class="${b}"><select class="in" data-a="sel" ${da}><option value=""></option>${o.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('')}</select></td>`}
+ if(t.k==='calc')return `<td class="${b} calc" data-calc="${col.id}" data-e="${esc(e.id)}">${esc(fmt(col,calc(c,col,e.id)))}</td>`;
+ if(t.k==='text')return `<td class="${b}"><input class="in tx" data-a="in" ${da} value="${esc(v||'')}" title="${esc(v||'')}"></td>`;
+ const shown=v==null?'':col.type==='temps'?fmtT(v):String(v).replace('.',',');
+ return `<td class="${b}"><input class="in" inputmode="decimal" data-a="in" ${da} value="${esc(shown)}" placeholder="${col.type==='temps'?'m:ss':esc(col.o.unite||'')}"></td>`}
+
+function foot(c,L){return `<td class="st0">Classe</td><td class="st1"></td>`+c.seances.map(s=>s.fold||!s.cols.length?'<td class="sg"></td>':s.cols.map((col,j)=>{const t=T(col);let x='';
+  if(t.k==='cycle'){const n={};L.forEach(e=>{const v=raw(c,col,e.id)||(col.type==='dispense'?dispAuto(e.id,s.date):'');if(v)n[v]=(n[v]||0)+1});x=t.st.filter(k=>n[k]).map(k=>k+n[k]).join(' ')}
+  else if(t.k==='toggle')x=L.filter(e=>raw(c,col,e.id)).length||'';
+  else if(t.k==='select'){const n={};L.forEach(e=>{const v=raw(c,col,e.id);if(v)n[v]=(n[v]||0)+1});x=Object.entries(n).map(([k,v])=>k+':'+v).join(' ')}
+  else if(t.k==='text')x=L.filter(e=>raw(c,col,e.id)).length?L.filter(e=>raw(c,col,e.id)).length+' obs.':'';
+  else{const ns=L.map(e=>numv(c,col,e.id)).filter(v=>v!=null);if(ns.length){const m=ns.reduce((a,b)=>a+b,0)/ns.length,bs=bestDir(col)==='min'?Math.min(...ns):Math.max(...ns);x=`moy ${fmt(col,m)}<br>meill. ${fmt(col,bs)}`}}
+  return `<td class="${j?'':'sg'}">${typeof x==='string'&&x.includes('<br>')?x:esc(x)}</td>`}).join('')).join('')}
+
+function refreshLive(){const c=cy(),L=pupils();document.querySelectorAll('[data-calc]').forEach(td=>{const col=allCols(c).find(x=>x.col.id===td.dataset.calc)?.col;if(col)td.textContent=fmt(col,calc(c,col,td.dataset.e))});
+ const f=$('#tf');if(f)f.innerHTML=foot(c,L)}
+
+/* ───── Bilan de la classe ───── */
+function agg(e){const a={se:0,P:0,A:0,R:0,ten:0,inf:0,dis:0,pl:0,mo:0,inc:0,obs:0};
+ for(const c of C().cycles)for(const s of c.seances){a.se++;let d='';
+  for(const col of s.cols){const v=raw(c,col,e.id);
+   if(col.type==='appel'&&v)a[v]++;else if(col.type==='tenue'&&v)a.ten++;else if(col.type==='infirmerie'&&v)a.inf++;
+   else if(col.type==='dispense'&&v)d=v;else if(col.type==='comportement'&&v)a[{'+':'pl','−':'mo','!':'inc'}[v]]++;
+   else if(col.type==='texte'&&v)a.obs++}
+  if(d||dispAuto(e.id,s.date))a.dis++}
+ return a}
+function renderBilan(){const L=pupils(),K=C(),A=L.map(e=>[e,agg(e)]);
+ const H=[['se','Séances'],['P','Présent'],['A','Absent'],['R','Retard'],['ten','👕 Tenue'],['inf','🩹 Infirm.'],['dis','🩺 Disp.'],['pl','⚖️ +'],['mo','⚖️ −'],['inc','⚠ Incid.'],['obs','📝 Obs.']];
+ const mx=k=>Math.max(1,...A.map(x=>x[1][k])),warm={A:'255,90,90',R:'255,160,40',ten:'255,140,60',inf:'120,170,255',dis:'90,140,255',pl:'90,220,140',mo:'255,160,40',inc:'255,80,80',obs:'255,210,122'};
+ let h=`<div class="bar"><h2>Bilan · ${esc(S.classe)}</h2><span class="mut">${K.cycles.length} cycle(s) · ${K.cycles.reduce((n,c)=>n+c.seances.length,0)} séance(s) · cliquez sur un élève pour sa synthèse</span></div>`;
+ h+=`<div class="grid" style="max-height:none"><table class="bt"><thead><tr class="r1"><th class="st0">Élève</th><th class="st1">Classe</th>${H.map(x=>`<th>${x[1]}</th>`).join('')}<th>Assiduité</th></tr></thead><tbody>`
+  +A.map(([e,a])=>{const pr=a.P+a.R+a.A?Math.round(100*(a.P+a.R)/(a.P+a.R+a.A)):null;
+   return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td><td class="st1">${esc(e.classe)}</td>`
+   +H.map(([k])=>{const n=a[k];return k==='se'||k==='P'?`<td>${n}</td>`:n?`<td class="h" style="background:rgba(${warm[k]},${(.15+.5*n/mx(k)).toFixed(2)})">${n}</td>`:'<td class="z">–</td>'}).join('')
+   +`<td>${pr==null?'–':pr+' %'}</td></tr>`}).join('')
+  +`</tbody><tfoot><tr><td class="st0">Total</td><td class="st1"></td>${H.map(([k])=>`<td>${k==='se'?(A[0]?.[1].se??0):A.reduce((s,x)=>s+x[1][k],0)}</td>`).join('')}<td></td></tr></tfoot></table></div>`;
+ /* performances : colonnes numériques regroupées par nom dans chaque cycle */
+ for(const c of K.cycles){const G=new Map();allCols(c).forEach(x=>{if(NUMK.includes(T(x.col).k)){const k=x.col.nom.trim().toLowerCase();if(!G.has(k))G.set(k,[]);G.get(k).push(x)}});
+  if(!G.size)continue;
+  h+=`<div class="card"><h3>Performances · ${esc(c.nom)}</h3><div class="grid" style="max-height:none"><table><thead><tr class="r1"><th class="st0">Élève</th>${[...G.values()].map(g=>`<th>${T(g[0].col).i} ${esc(g[0].col.nom)}<br><small style="color:var(--mut)">meilleure · ${g.length} relevé(s)</small></th>`).join('')}</tr></thead><tbody>`
+   +L.map(e=>`<tr><td class="st0"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</td>`+[...G.values()].map(g=>{const vs=g.map(x=>[x,numv(c,x.col,e.id)]).filter(y=>y[1]!=null);if(!vs.length)return'<td class="z">–</td>';
+    const col=g[0].col,dir=bestDir(col),best=vs.reduce((a,b)=>(dir==='min'?b[1]<a[1]:b[1]>a[1])?b:a),f=vs[0][1],l=vs[vs.length-1][1];
+    const pg=vs.length>1?((dir==='min'?l<f:l>f)?`<span class="up">▲ ${fmt(col,Math.abs(l-f))}</span>`:l===f?'':`<span class="dn">▼ ${fmt(col,Math.abs(l-f))}</span>`):'';
+    return `<td title="${esc(vs.map(y=>'S'+(y[0].si+1)+' : '+fmt(y[0].col,y[1])).join(' | '))}"><b>${esc(fmt(col,best[1]))}</b> ${pg}</td>`}).join('')+'</tr>').join('')+'</tbody></table></div></div>'}
+ $('#view').innerHTML=h}
+
+/* ───── Fiche élève (synthèse) ───── */
+function fiche(id){const e=E.find(x=>x.id===id);if(!e)return;const a=agg(e);
+ let h=`<h3>${esc(e.nom.toUpperCase())} ${esc(e.prenom)} · ${esc(e.classe)}</h3><div class="chips"><span>${a.se} séance(s)</span><span>Abs. ${a.A}</span><span>Ret. ${a.R}</span><span>👕 ${a.ten}</span><span>🩹 ${a.inf}</span><span>🩺 ${a.dis}</span><span>⚖️ +${a.pl} / −${a.mo} / ⚠${a.inc}</span></div><div class="fi">`;
+ const P=C().disp.filter(d=>d.eleve===id);if(P.length)h+=`<h4>Périodes de dispense</h4>`+P.map(d=>`<div class="se">${esc(TYPES.dispense.lab[d.type])} du ${esc(frD(d.du))} ${d.au?'au '+esc(frD(d.au)):'(sans fin)'} ${esc(d.motif||'')}</div>`).join('');
+ for(const c of C().cycles){const items=c.seances.map((s,i)=>{const l=s.cols.map(col=>[col,txt(c,s,col,id)]).filter(x=>x[1]&&!(x[0].type==='appel'&&x[1]==='Présent'));
+   return l.length?`<div class="se"><b>S${i+1} · ${esc(frD(s.date))}</b> ${esc(s.titre||'')}<br>${l.map(([col,v])=>`${T(col).i} ${esc(col.nom)} : <b>${esc(v)}</b>`).join(' · ')}</div>`:''}).join('');
+  h+=`<h4>${esc(c.nom)}</h4>`+(items||'<div class="help">Rien à signaler.</div>')}
+ modal(h+`</div><div class="bar"><span class="sp"></span><button class="btn r" data-m="close">Fermer</button></div>`)}
+
+/* ───── Fenêtres ───── */
+function modal(h,bind){$('#mo').innerHTML=h;$('#ov').hidden=false;bind&&bind($('#mo'));const f=$('#mo').querySelector('input:not([type=checkbox]),select');f&&f.focus()}
+const close=()=>{$('#ov').hidden=true};
+$('#ov').onclick=e=>{if(e.target.id==='ov'||e.target.dataset.m==='close')close()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+function confirmBtn(btn,fn){btn.onclick=()=>{if(btn.dataset.ok){fn();return}btn.dataset.ok=1;btn.textContent='Confirmer la suppression ?'}}
+
+function cycleModal(c){modal(`<h3>${c?'Modifier le cycle':'Nouveau cycle'}</h3><form id="f"><label>Nom du cycle (activité)<input name="nom" required value="${esc(c?.nom||'')}" placeholder="ex : Demi-fond, Badminton, Acrosport"></label>
+ <div class="bar"><button class="btn">${c?'Enregistrer':'Créer'}</button><button type="button" class="btn r" data-m="close">Annuler</button><span class="sp"></span>${c?'<button type="button" class="btn k" id="del">Supprimer</button>':''}</div></form>`,m=>{
+ m.querySelector('#f').onsubmit=ev=>{ev.preventDefault();const nom=ev.target.nom.value.trim();if(c)c.nom=nom;else{const n={id:uid(),nom,seq:0,seances:[],vals:{}};C().cycles.push(n);C().tab=n.id}save();close();render()};
+ c&&confirmBtn(m.querySelector('#del'),()=>{C().cycles=C().cycles.filter(x=>x!==c);C().tab=null;save();close();render()})})}
+
+function seanceModal(s){const c=cy(),prev=c.seances[c.seances.length-1];
+ const pre=['appel','tenue','dispense','infirmerie','comportement'];
+ modal(`<h3>${s?'Modifier la séance':'Nouvelle séance'}</h3><form id="f"><label>Date<input type="date" name="date" required value="${s?.date||today()}"></label>
+ <label>Intitulé (facultatif)<input name="titre" value="${esc(s?.titre||'')}" placeholder="ex : Test 6 min, situation d'apprentissage 2"></label>
+ ${s?'':`${prev?`<label class="chk"><input type="checkbox" name="copy" checked> Reprendre les colonnes de la séance précédente (${esc(frD(prev.date))}, ${prev.cols.length} col.)</label>`:''}
+ <div id="pre" ${prev?'hidden':''}><label>Colonnes créées d'office</label>${pre.map(k=>`<label class="chk"><input type="checkbox" name="t_${k}" ${k==='appel'||k==='tenue'?'checked':''}> ${TYPES[k].i} ${TYPES[k].l}</label>`).join('')}</div>`}
+ <div class="bar"><button class="btn">${s?'Enregistrer':'Créer la séance'}</button><button type="button" class="btn r" data-m="close">Annuler</button><span class="sp"></span>${s?'<button type="button" class="btn k" id="del">Supprimer</button>':''}</div></form>`,m=>{
+ const f=m.querySelector('#f');if(f.copy)f.copy.onchange=()=>m.querySelector('#pre').hidden=f.copy.checked;
+ f.onsubmit=ev=>{ev.preventDefault();if(s){s.date=f.date.value;s.titre=f.titre.value.trim()}else{
+   const n={id:uid(),date:f.date.value,titre:f.titre.value.trim(),cols:[]};
+   if(f.copy&&f.copy.checked){const map={};n.cols=prev.cols.map(o=>{const x=JSON.parse(JSON.stringify(o));x.id=uid();x.code='c'+(++c.seq);map[o.code]=x.code;return x});
+    n.cols.forEach(x=>{if(x.type==='calcul'){x.o.refs=(x.o.refs||[]).map(r=>map[r]||r);if(x.o.f)x.o.f=x.o.f.replace(/\bc\d+\b/g,r=>map[r]||r)}})}
+   else pre.forEach(k=>{if(f['t_'+k].checked)n.cols.push(newCol(c,k))});
+   c.seances.push(n)}
+  save();close();render();const g=$('.grid');if(g&&!s)g.scrollLeft=g.scrollWidth};
+ s&&confirmBtn(m.querySelector('#del'),()=>{c.seances=c.seances.filter(x=>x!==s);save();close();render()})})}
+
+function newCol(c,type,nom){const t=TYPES[type];return{id:uid(),code:'c'+(++c.seq),type,nom:nom||t.l,cat:t.cat,o:type==='distance'?{unite:'m'}:type==='equipe'?{liste:'A,B,C,D'}:type==='calcul'?{op:'somme',refs:[],dec:2,unite:''}:{}}}
+
+function colModal(s,col){const c=cy();let type=col?.type||'texte';
+ const others=()=>allCols(c).filter(x=>NUMK.includes(T(x.col).k)&&(!col||x.col.id!==col.id));
+ const opts=o=>{const t=TYPES[type];
+  if(type==='equipe')return `<label>Équipes proposées (séparées par des virgules)<input name="liste" value="${esc(o.liste||'A,B,C,D')}"></label>`;
+  if(type==='distance'||type==='nombre')return `<label>Unité<input name="unite" value="${esc(o.unite??t.u)}" placeholder="m, pts, rép…"></label>${type==='nombre'?`<label>Sur (facultatif, ex : 20 pour une note)<input name="max" inputmode="decimal" value="${esc(o.max||'')}"></label>`:''}<label>Meilleure valeur<select name="best"><option value="max">la plus grande</option><option value="min" ${o.best==='min'?'selected':''}>la plus petite</option></select></label>`;
+  if(type==='temps')return `<p class="help">Saisie libre : 1:23.4 · 1'23"4 · 83,4 (secondes). Le plus petit temps est retenu comme meilleur.</p><label>Meilleure valeur<select name="best"><option value="min">le plus petit temps</option><option value="max" ${o.best==='max'?'selected':''}>le plus grand temps (gainage…)</option></select></label>`;
+  if(type==='calcul'){const R=others();return `<label>Opération<select name="op">${Object.entries(OPS).map(([k,v])=>`<option value="${k}" ${o.op===k?'selected':''}>${v}</option>`).join('')}</select></label>
+   <div id="rf"><label>Colonnes utilisées <span class="help">(dans l'ordre de sélection pour progression et vitesse)</span></label><div class="refs">${R.length?R.map(x=>`<label class="chk"><input type="checkbox" name="ref" value="${x.col.code}" ${(o.refs||[]).includes(x.col.code)?'checked':''}> <span class="code">${x.col.code}</span> S${x.si+1} · ${esc(frD(x.s.date))} · ${T(x.col).i} ${esc(x.col.nom)}</label>`).join(''):'<p class="help">Aucune colonne numérique dans ce cycle pour l\'instant.</p>'}</div></div>
+   <div id="fl"><label>Formule<input name="f" value="${esc(o.f||'')}" placeholder="ex : c6/100  ou  (c3+c4)/2"></label><p class="help">Utilisez les codes des colonnes du cycle (${R.map(x=>x.col.code).join(', ')||'aucune'}) et + − * / ( ) min max round abs sqrt pow. Décimales avec un point.</p></div>
+   <label>Unité du résultat<input name="unite" value="${esc(o.unite||'')}" placeholder="km/h, pts… ou « temps » pour afficher en m:ss"></label><label>Décimales<input name="dec" type="number" min="0" max="4" value="${o.dec??2}"></label>
+   <label>Meilleure valeur<select name="best"><option value="max">la plus grande</option><option value="min" ${o.best==='min'?'selected':''}>la plus petite</option></select></label>`}
+  if(type==='dispense')return `<p class="help">Les périodes de dispense saisies (bouton 🩺 Dispenses) s'affichent automatiquement en pointillés ; un appui force une autre valeur.</p>`;
+  return ''};
+ const draw=()=>{const o=col&&col.type===type?col.o:newCol({seq:0},type).o;
+  modal(`<h3>${col?'Modifier la colonne':'Ajouter une colonne'} <span class="help">${esc(frD(s.date))}</span></h3>
+  ${col?`<p class="help">Type : ${T(col).i} ${T(col).l} · code <span class="code">${col.code}</span></p>`:`<div class="tg">${Object.entries(TYPES).map(([k,t])=>`<button type="button" data-ty="${k}" class="${k===type?'on':''}">${t.i} ${t.l}</button>`).join('')}</div>`}
+  <form id="f"><label>Nom de la colonne<input name="nom" required value="${esc(col?.type===type?col.nom:TYPES[type].l)}"></label>
+  <label>Catégorie pour le bilan<select name="cat">${CATS.map(k=>`<option ${k===(col?.type===type?col.cat:TYPES[type].cat)?'selected':''}>${k}</option>`).join('')}</select></label>
+  ${opts(o)}
+  <div class="bar"><button class="btn">${col?'Enregistrer':'Ajouter'}</button><button type="button" class="btn r" data-m="close">Annuler</button><span class="sp"></span>
+  ${col?'<button type="button" class="btn r s" id="mvl">◀</button><button type="button" class="btn r s" id="mvr">▶</button><button type="button" class="btn k" id="del">Supprimer</button>':''}</div></form>`,m=>{
+  m.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{type=b.dataset.ty;draw()});
+  const f=m.querySelector('#f'),tog=()=>{if(f.op){m.querySelector('#fl').hidden=f.op.value!=='libre';m.querySelector('#rf').hidden=f.op.value==='libre'}};
+  if(f.op){f.op.onchange=tog;tog()}
+  const order=[];m.querySelectorAll('[name=ref]').forEach(x=>{if(x.checked)order.push(x.value);x.onchange=()=>{const i=order.indexOf(x.value);if(x.checked&&i<0)order.push(x.value);if(!x.checked&&i>=0)order.splice(i,1)}});
+  f.onsubmit=ev=>{ev.preventDefault();const t=col||newCol(c,type);t.nom=f.nom.value.trim();t.cat=f.cat.value;const o=t.o;
+   ['liste','unite','max','best','op','f'].forEach(k=>{if(f[k])o[k]=f[k].value.trim()});if(f.dec)o.dec=+f.dec.value||0;
+   if(type==='calcul'){const sel=[...m.querySelectorAll('[name=ref]:checked')].map(x=>x.value);o.refs=[...order.filter(x=>sel.includes(x)),...sel.filter(x=>!order.includes(x))]}
+   if(!col){s.cols.push(t);s.fold=false}save();close();render()};
+  if(col){const mv=d=>{const i=s.cols.indexOf(col),j=i+d;if(j<0||j>=s.cols.length)return;[s.cols[i],s.cols[j]]=[s.cols[j],s.cols[i]];save();render()};
+   m.querySelector('#mvl').onclick=()=>mv(-1);m.querySelector('#mvr').onclick=()=>mv(1);
+   confirmBtn(m.querySelector('#del'),()=>{s.cols=s.cols.filter(x=>x!==col);Object.values(c.vals||{}).forEach(r=>delete r[col.id]);save();close();render()})}})};
+ draw()}
+
+function dispModal(){const K=C(),L=pupils(),nm=id=>{const e=E.find(x=>x.id===id);return e?e.nom.toUpperCase()+' '+e.prenom:'?'};
+ modal(`<h3>🩺 Périodes de dispense · ${esc(S.classe)}</h3><p class="help">Une période remplit automatiquement les colonnes « Dispense » des séances comprises entre les deux dates, et compte dans le bilan même sans colonne.</p>
+ ${K.disp.length?`<table class="dl">${K.disp.map((d,i)=>`<tr><td><b>${esc(nm(d.eleve))}</b><br><span class="help">${esc(TYPES.dispense.lab[d.type])} · ${esc(frD(d.du))} → ${d.au?esc(frD(d.au)):'sans fin'} ${esc(d.motif||'')}</span></td><td style="text-align:right"><button class="btn s k" data-rm="${i}">✕</button></td></tr>`).join('')}</table>`:'<p class="help">Aucune période saisie.</p>'}
+ <form id="f" class="card"><label>Élève<select name="eleve" required>${L.map(e=>`<option value="${esc(e.id)}">${esc(e.nom.toUpperCase()+' '+e.prenom)}</option>`).join('')}</select></label>
+ <label>Type<select name="type"><option value="DT">Dispense totale</option><option value="DP">Dispense partielle</option><option value="IN">Inaptitude</option></select></label>
+ <div class="bar" style="margin:0"><label style="flex:1">Du<input type="date" name="du" required value="${today()}"></label><label style="flex:1">Au (facultatif)<input type="date" name="au"></label></div>
+ <label>Motif / remarque<input name="motif" placeholder="ex : certificat médical, entorse"></label><div class="bar"><button class="btn">Ajouter la période</button><span class="sp"></span><button type="button" class="btn r" data-m="close">Fermer</button></div></form>`,m=>{
+ m.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{K.disp.splice(+b.dataset.rm,1);save();render();dispModal()});
+ m.querySelector('#f').onsubmit=ev=>{ev.preventDefault();const d=Object.fromEntries(new FormData(ev.target));K.disp.push(d);save();render();dispModal()}})}
+
+function setModal(){modal(`<h3>⚙️ Réglages</h3>
+ <div class="card"><h3>Liste des élèves</h3><p class="help">${E.length} élève(s) dans la base locale. Depuis le portail Mes Apps EPS, la liste est déjà partagée ; sinon chargez le .xlsx ou le .csv exporté par le portail.</p><div class="bar"><button class="btn b" data-g="list">📂 Charger la liste</button><button class="btn r" data-g="demo">🧪 Classe exemple</button></div></div>
+ <div class="card"><h3>Sauvegarde du carnet</h3><p class="help">Le carnet (structure des cycles, séances, colonnes et saisies) est conservé sur cet appareil. La sauvegarde .json permet de le transférer sur un autre appareil.</p><div class="bar"><button class="btn r" data-g="json">⬇ Sauvegarder (.json)</button><button class="btn r" data-g="rjson">⬆ Restaurer</button></div><p class="msg" id="sm"></p></div>
+ <div class="bar"><span class="sp"></span><button class="btn r" data-m="close">Fermer</button></div>`)}
+
+/* ───── Lien avec Mes Apps EPS ───── */
+function lignes(eid,classe){const K=S.classes[classe];if(!K)return[];const out=[];
+ for(const c of K.cycles)for(const s of c.seances){const o={Date:s.date,Cycle:c.nom,'Séance':s.titre||''},mes=[],obs=[];
+  for(const col of s.cols){const v=txt(c,s,col,eid);if(!v)continue;
+   if(['appel','tenue','infirmerie','dispense','comportement','equipe'].includes(col.type)){const k={appel:'Appel',tenue:'Tenue',infirmerie:'Infirmerie',dispense:'Dispense',comportement:'Comportement',equipe:'Équipe'}[col.type];o[k]=o[k]?o[k]+' ; '+v:v}
+   else if(col.type==='texte')obs.push((col.nom!==TYPES.texte.l?col.nom+' : ':'')+v);else mes.push(col.nom+' : '+v)}
+  if(!o.Dispense){const a=dispAuto(eid,s.date);if(a)o.Dispense=TYPES.dispense.lab[a]}
+  if(mes.length)o.Mesures=mes.join(' · ');if(obs.length)o.Observations=obs.join(' · ');
+  if(Object.keys(o).length>3)out.push(o)}
+ return out}
+async function sync(quiet){const st=$('#st');try{let n=0;
+  for(const e of E){if(!S.classes[e.classe])continue;const l=lignes(e.id,e.classe);const had=e.ext&&e.ext[APP];if(!l.length&&!had)continue;await EPS.setExt(APP,e.id,{lignes:l});n+=l.length}
+  st.style.color='var(--ok)';st.textContent=quiet?'✓ enregistré':`✅ ${n} ligne(s) enregistrée(s) dans Mes Apps EPS`;E=await EPS.all();return true}
+ catch(x){st.style.color='var(--ko)';st.textContent='❌ '+(x.message||x);return false}}
+async function exportX(){if(!await sync())return;const st=$('#st');
+ try{const b=await EPS.exportXLSX({ids:pupils().map(e=>e.id),apps:[APP]});EPS.downloadXLSX(b,`ProfNoteEPS_${S.classe.replace(/[^\w-]+/g,'_')}_${today()}.xlsx`);st.textContent='⬇ Export lancé'}
+ catch(x){st.style.color='var(--ko)';st.textContent='❌ '+(x.message||x)}}
+async function demo(){const N=[['ELEVE1','Prénom1','F'],['ELEVE2','Prénom2','F'],['ELEVE3','Prénom3','M'],['ELEVE4','Prénom4','M'],['ELEVE5','Prénom5','M'],['ELEVE6','Prénom6','M'],['ELEVE7','Prénom7','F'],['ELEVE8','Prénom8','M'],['ELEVE9','Prénom9','M'],['ELEVE10','Prénom10','M'],['ELEVE11','Prénom11','F'],['ELEVE12','Prénom12','M'],['ELEVE13','Prénom13','F'],['ELEVE14','Prénom14','M'],['ELEVE15','Prénom15','F'],['ELEVE16','Prénom16','M']];
+ for(const[nom,prenom,sexe]of N)await EPS.putEleve({nom,prenom,classe:'2NDE DEMO',sexe});E=await EPS.all();
+ const cl='2NDE DEMO';S.classe=cl;if(!S.classes[cl]||!S.classes[cl].cycles.length){S.classes[cl]={cycles:[],disp:[],tab:null};const K=S.classes[cl],L=E.filter(e=>e.classe===cl);
+  const c={id:uid(),nom:'Demi-fond',seq:0,seances:[],vals:{}};K.cycles.push(c);K.tab=c.id;
+  const d=n=>{const x=new Date();x.setDate(x.getDate()-n);return iso(x)};
+  const s1={id:uid(),date:d(14),titre:'Test 6 min (VMA)',cols:[newCol(c,'appel'),newCol(c,'tenue'),newCol(c,'distance','Distance 6 min')]};
+  const v1=newCol(c,'calcul','VMA');v1.o={op:'libre',f:s1.cols[2].code+'/100',dec:1,unite:'km/h'};s1.cols.push(v1);
+  const s2={id:uid(),date:d(7),titre:'Fractionné 30/30',cols:[newCol(c,'appel'),newCol(c,'tenue'),newCol(c,'equipe','Groupe VMA'),newCol(c,'comportement'),newCol(c,'texte','Observation')]};
+  s2.cols[2].o.liste='Lents,Moyens,Rapides';
+  const s3={id:uid(),date:d(0),titre:'Test 1000 m',cols:[newCol(c,'appel'),newCol(c,'tenue'),newCol(c,'dispense'),newCol(c,'temps','Temps 1000 m')]};
+  const vit=newCol(c,'calcul','Vitesse 1000 m');vit.o={op:'libre',f:'1000/'+s3.cols[3].code+'*3.6',dec:1,unite:'km/h'};s3.cols.push(vit);
+  c.seances.push(s1,s2,s3);
+  L.forEach((e,i)=>{const r=c.vals[e.id]={};const dist=1150+((i*137)%600);
+   r[s1.cols[0].id]=i===4?'A':'P';if(i===4)delete r[s1.cols[2].id];else r[s1.cols[2].id]=dist;if(i%7===3)r[s1.cols[1].id]=1;
+   r[s2.cols[0].id]=i===9?'R':'P';r[s2.cols[2].id]=dist<1350?'Lents':dist<1550?'Moyens':'Rapides';if(i%5===1)r[s2.cols[3].id]='+';if(i===6)r[s2.cols[3].id]='−';
+   if(i===2)r[s2.cols[4].id]='Gère bien son allure, régulier.';if(i===6)r[s2.cols[4].id]='Part trop vite, s\'arrête à la 4ᵉ répétition.';
+   r[s3.cols[0].id]=i===11?'A':'P';if(i!==11&&i!==3)r[s3.cols[3].id]=Math.round((1000/(dist/100)*3.6*(0.92+((i*31)%10)/100))*10)/10;if(i%6===2)r[s3.cols[1].id]=1});
+  K.disp.push({eleve:L[3].id,type:'DT',du:d(2),au:d(-10),motif:'Certificat médical (entorse)'})}
+ save();close();render()}
+
+/* ───── Événements ───── */
+document.addEventListener('click',async e=>{const g=e.target.closest('[data-g]'),t=e.target.closest('[data-t]');
+ if(t){C().tab=t.dataset.t;save();render();return}
+ if(!g)return;const k=g.dataset.g;
+ if(k==='list')$('#fList').click();else if(k==='demo')demo();else if(k==='cycle')cycleModal();else if(k==='ecycle')cycleModal(cy());
+ else if(k==='seance')seanceModal();else if(k==='disp')dispModal();
+ else if(k==='json'){const b=new TextEncoder().encode(JSON.stringify(S,null,1));try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b],{type:'application/json'}));a.download='ProfNoteEPS_sauvegarde_'+today()+'.json';document.body.appendChild(a);a.click();a.remove();$('#sm').textContent='⬇ Sauvegarde lancée'}catch(x){$('#sm').textContent='❌ '+x.message}}
+ else if(k==='rjson')$('#fJson').click()});
+$('#view').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,c=cy();
+ const s=c&&c.seances.find(x=>x.id===b.dataset.s),col=c&&allCols(c).find(x=>x.col.id===b.dataset.c)?.col;
+ if(a==='fiche')return fiche(b.dataset.e);
+ if(a==='addcol')return colModal(s);if(a==='col')return colModal(s,col);if(a==='smenu')return seanceModal(s);
+ if(a==='fold'){s.fold=!s.fold;save();return render()}
+ if(a==='allp'){pupils().forEach(p=>{if(!raw(c,col,p.id))setVal(p.id,col.id,'P')});return render()}
+ if(a==='cyc'||a==='tog'){const eid=b.dataset.e,v=raw(c,col,eid);
+  if(a==='tog')setVal(eid,col.id,v?'':1);else{const st=T(col).st;setVal(eid,col.id,st[(st.indexOf(v||'')+1)%st.length])}
+  const sea=c.seances.find(x=>x.cols.includes(col)),td=b.parentElement,j=sea.cols.indexOf(col);td.outerHTML=cell(c,sea,col,E.find(x=>x.id===eid),j);refreshLive()}});
+$('#view').addEventListener('change',e=>{const b=e.target.closest('[data-a]');if(!b)return;const c=cy(),col=allCols(c).find(x=>x.col.id===b.dataset.c)?.col;if(!col)return;
+ if(b.dataset.a==='sel')setVal(b.dataset.e,col.id,b.value);
+ else{const t=T(col);if(t.k==='text')setVal(b.dataset.e,col.id,b.value.trim());
+  else{const v=b.value.trim()===''?null:col.type==='temps'?parseT(b.value):parseNum(b.value);
+   if(b.value.trim()&&v==null){b.style.borderColor='var(--ko)';return}b.style.borderColor='';setVal(b.dataset.e,col.id,v);
+   if(v!=null)b.value=col.type==='temps'?fmtT(v):String(v).replace('.',',')}}
+ refreshLive()});
+$('#view').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.target.tagName!=='INPUT')return;e.preventDefault();const td=e.target.closest('td'),tr=td.parentElement,i=[...tr.children].indexOf(td);
+ const nx=(e.shiftKey?tr.previousElementSibling:tr.nextElementSibling)?.children[i]?.querySelector('input');e.target.blur();nx&&nx.focus()});
+$('#cls').onchange=e=>{S.classe=e.target.value;save();render()};
+$('#bSet').onclick=setModal;$('#bSync').onclick=()=>sync();$('#bXls').onclick=exportX;
+$('#fList').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const r=await EPS.importFile(f);E=await EPS.all();$('#st').style.color='var(--ok)';$('#st').textContent=`✅ ${E.length} élève(s) chargé(s)`;close();render()}catch(x){$('#st').style.color='var(--ko)';$('#st').textContent='❌ '+x.message}};
+$('#fJson').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());if(!j.classes)throw new Error('fichier non reconnu');S=j;save();close();render()}catch(x){const m=$('#sm');if(m)m.textContent='❌ '+x.message}};
+
+(async()=>{try{E=await EPS.all()}catch(x){E=[]}render()})();
+if('serviceWorker'in navigator&&/github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

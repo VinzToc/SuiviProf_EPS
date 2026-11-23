@@ -19,7 +19,7 @@ body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-seri
 body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 8% 4%,rgba(255,138,31,.18),transparent 55%),radial-gradient(ellipse at 94% 96%,rgba(47,155,255,.2),transparent 55%)}
 header{display:flex;align-items:center;gap:12px;padding:12px 14px 6px;flex-wrap:wrap}
 h1{margin:0;font-size:1.35rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;background:linear-gradient(90deg,var(--c1),var(--c3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
-.sp{flex:1}
+.sp{flex:1}.lg{width:42px;height:42px;border-radius:11px;flex:none}
 main{padding:0 14px 40px}
 .btn{border:0;border-radius:12px;padding:9px 14px;font:inherit;font-weight:800;font-size:.86rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,#ffa21f,#ff5e00);box-shadow:0 4px 14px #ff5e0040;min-height:40px;white-space:nowrap}
 .btn.b{background:linear-gradient(135deg,#2f9bff,#0a4fd0);box-shadow:0 4px 14px #0a4fd045}
@@ -115,7 +115,7 @@ td select.in{width:auto;text-align:left}
 </head>
 <body>
 <header>
- <h1>SuiviProf EPS</h1>
+ <img src="icons/icon-192.png" alt="" class="lg"><h1>SuiviProf EPS</h1>
  <select id="cls" aria-label="Classe" hidden></select>
  <span class="sp"></span>
  <span class="msg" id="st"></span>
@@ -329,6 +329,11 @@ function agg(e,R){const a={se:0,P:0,A:0,R:0,ten:0,inf:0,dis:0,pl:0,mo:0,inc:0,ob
    else if(col.type==='texte'&&v)a.obs++}
   if(d||dispAuto(e.id,s.date))a.dis++}
  return a}
+/* Parcours par champ d'apprentissage : séances pratiquées (présent/retard, non dispensé) sur séances saisies */
+function caAgg(e,R){const o={};for(const c of C().cycles){if(!c.ca)continue;const x=o[c.ca]||(o[c.ca]={se:0,pr:0,dis:0,ab:0});
+ for(const s of c.seances){if(!done(s)||!hasData(c,s)||R&&(s.date<R.du||s.date>R.au))continue;x.se++;let ap='',d='';
+  for(const col of s.cols){const v=raw(c,col,e.id);if(col.type==='appel'&&v)ap=v;if(col.type==='dispense'&&v)d=v}
+  if(d||dispAuto(e.id,s.date))x.dis++;else if(ap==='P'||ap==='R')x.pr++;else if(ap==='A')x.ab++}}return o}
 function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().per[CO().eval==='S'?'S':'T'],R=K.bper!=null&&K.bper!=='an'?PS[+K.bper]:null,A=L.map(e=>[e,agg(e,R)]);
  const H=[['se','Séances'],['P','Présent'],['A','Absent'],['R','Retard'],['ten','👕 Tenue'],['inf','🩹 Infirm.'],['dis','🩺 Disp.'],['pl','⚖️ +'],['mo','⚖️ −'],['inc','⚠ Incid.'],['obs','📝 Obs.']];
  const mx=k=>Math.max(1,...A.map(x=>x[1][k])),warm={A:'255,90,90',R:'255,160,40',ten:'255,140,60',inf:'120,170,255',dis:'90,140,255',pl:'90,220,140',mo:'255,160,40',inc:'255,80,80',obs:'255,210,122'};
@@ -339,6 +344,11 @@ function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().pe
    +H.map(([k])=>{const n=a[k];return k==='se'||k==='P'?`<td>${n}</td>`:n?`<td class="h" style="background:rgba(${warm[k]},${(.15+.5*n/mx(k)).toFixed(2)})">${n}</td>`:'<td class="z">–</td>'}).join('')
    +`<td>${pr==null?'–':pr+' %'}</td></tr>`}).join('')
   +`</tbody><tfoot><tr><td class="st0">Total</td><td class="st1"></td>${H.map(([k])=>`<td>${k==='se'?(A[0]?.[1].se??0):A.reduce((s,x)=>s+x[1][k],0)}</td>`).join('')}<td></td></tr></tfoot></table></div>`;
+ const cyC={},CAk=Object.keys(CAS);K.cycles.forEach(c=>{if(c.ca)(cyC[c.ca]=cyC[c.ca]||[]).push(c)});
+ h+=`<div class="card"><h3>Parcours par champ d'apprentissage</h3><div class="grid" style="max-height:none"><table><thead><tr class="r1"><th class="st0">Élève</th>${CAk.map(k=>`<th title="${esc(CAS[k])}" style="vertical-align:top">${k}<small style="display:block;white-space:normal;max-width:170px;font-weight:600;color:${cyC[k]?'var(--mut)':'var(--ko)'}">${cyC[k]?esc(cyC[k].map(c=>c.nom).join(', ')):'aucun cycle programmé'}</small></th>`).join('')}</tr></thead><tbody>`
+  +L.map(e=>{const g=caAgg(e,R);return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td>`+CAk.map(k=>{const x=g[k];if(!x||!x.se)return'<td class="z">–</td>';const r=x.pr/x.se;
+   return `<td class="h" style="background:rgba(${r>=.75?'90,220,140':r>=.5?'255,160,40':'255,90,90'},.32)" title="${x.pr} séance(s) pratiquée(s) sur ${x.se}${x.ab?' · '+x.ab+' absence(s)':''}${x.dis?' · '+x.dis+' dispensée(s)':''}">${x.pr}/${x.se}${x.dis?` <small>🩺${x.dis}</small>`:''}</td>`}).join('')+'</tr>'}).join('')
+  +`</tbody></table></div><p class="help">Séances pratiquées (présent ou en retard, sans dispense) sur séances saisies dans les cycles de chaque CA. Vert : au moins 75 % · orange : au moins 50 % · rouge : moins de 50 %. Le CA5 ne concerne que le lycée.</p></div>`;
  /* performances : colonnes numériques regroupées par nom dans chaque cycle */
  for(const c of K.cycles){const G=new Map();allCols(c).forEach(x=>{if(NUMK.includes(T(x.col).k)&&(!R||x.s.date>=R.du&&x.s.date<=R.au)){const k=x.col.nom.trim().toLowerCase();if(!G.has(k))G.set(k,[]);G.get(k).push(x)}});
   if(!G.size)continue;
@@ -351,7 +361,7 @@ function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().pe
 
 /* ───── Fiche élève (synthèse) ───── */
 function fiche(id){const e=E.find(x=>x.id===id);if(!e)return;const a=agg(e);
- let h=`<h3>${esc(e.nom.toUpperCase())} ${esc(e.prenom)} · ${esc(e.classe)}</h3><div class="chips"><span>${a.se} séance(s)</span><span>Abs. ${a.A}</span><span>Ret. ${a.R}</span><span>👕 ${a.ten}</span><span>🩹 ${a.inf}</span><span>🩺 ${a.dis}</span><span>⚖️ +${a.pl} / −${a.mo} / ⚠${a.inc}</span></div><div class="fi">`;
+ let h=`<h3>${esc(e.nom.toUpperCase())} ${esc(e.prenom)} · ${esc(e.classe)}</h3><div class="chips"><span>${a.se} séance(s)</span><span>Abs. ${a.A}</span><span>Ret. ${a.R}</span><span>👕 ${a.ten}</span><span>🩹 ${a.inf}</span><span>🩺 ${a.dis}</span><span>⚖️ +${a.pl} / −${a.mo} / ⚠${a.inc}</span>${Object.entries(caAgg(e)).filter(([,x])=>x.se).sort().map(([k,x])=>`<span title="${esc(CAS[k])}">${k} ${x.pr}/${x.se}</span>`).join('')}</div><div class="fi">`;
  const P=C().disp.filter(d=>d.eleve===id);if(P.length)h+=`<h4>Périodes de dispense</h4>`+P.map(d=>`<div class="se">${esc(TYPES.dispense.lab[d.type])} du ${esc(frD(d.du))} ${d.au?'au '+esc(frD(d.au)):'(sans fin)'} ${esc(d.motif||'')}</div>`).join('');
  for(const c of C().cycles){const items=c.seances.map((s,i)=>{const l=s.cols.map(col=>[col,txt(c,s,col,id)]).filter(x=>x[1]&&!(x[0].type==='appel'&&x[1]==='Présent'));
    return l.length?`<div class="se"><b>S${i+1} · ${esc(frD(s.date))}</b> ${esc(s.titre||'')}<br>${l.map(([col,v])=>`${T(col).i} ${esc(col.nom)} : <b>${esc(v)}</b>`).join(' · ')}</div>`:''}).join('');

@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.10.0",
+  "date": "2026-11-24",
+  "titre": "Sauvegarde du carnet plus simple",
+  "items": [
+   "Nouveau bouton « 📒 Sauvegarder le carnet » en haut de page, à côté du bouton Mes Apps EPS (plus besoin d'aller dans les réglages).",
+   "La sauvegarde contient maintenant aussi les grilles et les évaluations de CompEval : une seule restauration remet tout en place.",
+   "Le bouton se met en surbrillance orange si le carnet n'a pas été sauvegardé depuis 7 jours.",
+   "L'appareil est invité à protéger les données du carnet contre l'effacement automatique du navigateur."
+  ]
+ },
+ {
   "v": "0.9.1",
   "date": "2026-11-24",
   "titre": "Mise à jour du 24 novembre 2026",

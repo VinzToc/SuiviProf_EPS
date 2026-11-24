@@ -135,6 +135,7 @@ main{padding-bottom:96px!important}
 .ocl button.on{border-color:transparent;background:linear-gradient(135deg,#1976d2,#16b3a8 60%,#34c759);color:#fff}
 .ovt tr[data-o]{cursor:pointer}.ovt tr[data-o]:hover td{background:rgba(255,255,255,.06)!important}.ovt tr.on td{background:rgba(46,211,160,.12)!important}
 .ovt td,.ovt th{white-space:normal;text-align:left;vertical-align:top}
+#bBak.warn{box-shadow:0 0 0 2px #ffb020,0 0 14px #ffb02099;animation:bakp 2s infinite}@keyframes bakp{50%{box-shadow:0 0 0 2px #ffb02055}}
 </style>
 
 
@@ -157,6 +158,7 @@ header .ttl p{margin:4px 0 0;font-size:.7rem;font-weight:600;letter-spacing:.1em
  <span class="sp"></span>
  <span class="msg" id="st"></span>
  <button class="btn b" id="bSync" hidden title="Enregistrer les saisies dans la base Mes Apps EPS">💾 <span class="hide-s">Mes Apps EPS</span></button>
+ <button class="btn r" id="bBak" title="Sauvegarder le carnet (cycles, séances, saisies et grilles CompEval) dans un fichier .json">📒 <span class="hide-s">Sauvegarder le carnet</span></button>
  <button class="btn r" id="bXls" hidden title="Exporter la feuille SuiviProf de la classe (.xlsx)">⬇ <span class="hide-s">.xlsx</span></button>
 </header>
 <main>
@@ -560,7 +562,7 @@ function dispModal(){const K=C(),L=pupils(),nm=id=>{const e=E.find(x=>x.id===id)
 
 function setModal(){modal(`<h3>⚙️ Réglages</h3>
  <div class="card"><h3>Liste des élèves</h3><p class="help">${E.length} élève(s) dans la base locale. Depuis le portail Mes Apps EPS, la liste est déjà partagée ; sinon chargez le .xlsx ou le .csv exporté par le portail.</p><div class="bar"><button class="btn b" data-g="list">📂 Charger la liste</button><button class="btn r" data-g="demo">🧪 Classe exemple</button></div></div>
- <div class="card"><h3>Sauvegarde du carnet</h3><p class="help">Le carnet (structure des cycles, séances, colonnes et saisies) est conservé sur cet appareil. La sauvegarde .json permet de le transférer sur un autre appareil.</p><div class="bar"><button class="btn r" data-g="json">⬇ Sauvegarder (.json)</button><button class="btn r" data-g="rjson">⬆ Restaurer</button></div><p class="msg" id="sm"></p></div>
+ <div class="card"><h3>Sauvegarde du carnet</h3><p class="help">Le carnet (structure des cycles, séances, colonnes et saisies) est conservé sur cet appareil. La sauvegarde .json (également accessible par le bouton « 📒 » en haut de page) contient le carnet <b>et les grilles / évaluations CompEval</b> : elle permet de le transférer sur un autre appareil.</p><div class="bar"><button class="btn r" data-g="json">⬇ Sauvegarder (.json)</button><button class="btn r" data-g="rjson">⬆ Restaurer</button></div><p class="msg" id="sm"></p></div>
  <div class="bar"><span class="sp"></span><button class="btn r" data-m="close">Fermer</button></div>`)}
 
 /* ───── Lien avec Mes Apps EPS ───── */
@@ -573,6 +575,20 @@ function lignes(eid,classe){const K=S.classes[classe];if(!K)return[];const out=[
   if(mes.length)o.Mesures=mes.join(' · ');if(obs.length)o.Observations=obs.join(' · ');
   if(!o.CA)delete o.CA;if(Object.keys(o).length>(o.CA?4:3))out.push(o)}
  return out}
+/* ───── Sauvegarde du carnet : carnet SuiviProf + données CompEval (grilles et évaluations) dans un seul .json ───── */
+const BAK_LS='SuiviProfEPS_derniere_sauvegarde';
+function ceRead(){try{return JSON.parse(localStorage.getItem(CE_KEY))||null}catch(e){return null}}
+function bakAge(){const t=+localStorage.getItem(BAK_LS)||0;return t?Math.floor((Date.now()-t)/864e5):null}
+function bakBadge(){const b=$('#bBak');if(!b)return;const a=bakAge(),has=Object.values(S.classes||{}).some(k=>k.cycles&&k.cycles.length);b.classList.toggle('warn',has&&(a===null||a>=7));
+ b.title='Sauvegarder le carnet (cycles, séances, saisies et grilles CompEval) dans un fichier .json'+(a===null?' — jamais sauvegardé sur cet appareil':a===0?' — dernière sauvegarde : aujourd’hui':' — dernière sauvegarde il y a '+a+' jour(s)')}
+function sauvegarderCarnet(out){const ce=ceRead();const o={format:'SuiviProf-sauvegarde',v:2,date:new Date().toISOString(),carnet:S,compeval:ce};
+ const m=out||$('#st');try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([new TextEncoder().encode(JSON.stringify(o))],{type:'application/json'}));a.download='SuiviProf_sauvegarde_'+today()+'.json';document.body.appendChild(a);a.click();a.remove();
+  try{localStorage.setItem(BAK_LS,Date.now())}catch(e){}bakBadge();m.style.color='var(--ok)';m.textContent='⬇ Sauvegarde lancée'+(ce?' (carnet + grilles et évaluations CompEval)':'')}catch(x){m.style.color='var(--ko)';m.textContent='❌ '+x.message}}
+function restaurerCarnet(j){const c=j&&j.format==='SuiviProf-sauvegarde'?j.carnet:j;if(!c||!c.classes)throw new Error('fichier non reconnu');S=c;let msg='';
+ if(j.compeval&&Array.isArray(j.compeval.grids)){const cur=ceRead()||{grids:[],evals:{},cur:{}};const ids=new Set((cur.grids||[]).map(g=>g.id));let ng=0;
+  j.compeval.grids.forEach(g=>{if(!ids.has(g.id)){cur.grids.push(g);ng++}});cur.evals=Object.assign({},j.compeval.evals||{},cur.evals||{});
+  try{localStorage.setItem(CE_KEY,JSON.stringify(Object.assign({auto:false},j.compeval,cur)))}catch(e){}msg=` Données CompEval fusionnées (${ng} grille(s) ajoutée(s)).`}
+ save();return msg}
 async function sync(quiet){const st=$('#st');try{let n=0;
   for(const e of E){if(!S.classes[e.classe])continue;const l=lignes(e.id,e.classe);const had=e.ext&&e.ext[APP];if(!l.length&&!had)continue;await EPS.setExt(APP,e.id,{lignes:l});n+=l.length}
   st.style.color='var(--ok)';st.textContent=quiet?'✓ enregistré':`✅ ${n} ligne(s) enregistrée(s) dans Mes Apps EPS`;E=await EPS.all();return true}
@@ -732,7 +748,7 @@ document.addEventListener('click',async e=>{const g=e.target.closest('[data-g]')
  if(k==='org'){S.view='org';save();return render()}if(k==='carnet'){S.view='';save();return render()}
  if(k==='list')$('#fList').click();else if(k==='demo')demo();else if(k==='cycle')cycleModal();else if(k==='ecycle')cycleModal(cy());
  else if(k==='seance')seanceModal();else if(k==='disp')dispModal();
- else if(k==='json'){const b=new TextEncoder().encode(JSON.stringify(S,null,1));try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b],{type:'application/json'}));a.download='SuiviProf_sauvegarde_'+today()+'.json';document.body.appendChild(a);a.click();a.remove();$('#sm').textContent='⬇ Sauvegarde lancée'}catch(x){$('#sm').textContent='❌ '+x.message}}
+ else if(k==='json')sauvegarderCarnet($('#sm'))
  else if(k==='rjson')$('#fJson').click()});
 $('#view').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,c=cy();
  const s=c&&c.seances.find(x=>x.id===b.dataset.s),col=c&&allCols(c).find(x=>x.col.id===b.dataset.c)?.col;
@@ -754,12 +770,12 @@ $('#view').addEventListener('change',e=>{const b=e.target.closest('[data-a]');if
 $('#view').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.target.tagName!=='INPUT')return;e.preventDefault();const td=e.target.closest('td'),tr=td.parentElement,i=[...tr.children].indexOf(td);
  const nx=(e.shiftKey?tr.previousElementSibling:tr.nextElementSibling)?.children[i]?.querySelector('input');e.target.blur();nx&&nx.focus()});
 $('#cls').onchange=e=>{S.classe=e.target.value;AUTO=true;save();render()};
-$('#bSync').onclick=()=>sync();$('#bXls').onclick=exportX;
+$('#bBak').onclick=()=>sauvegarderCarnet();$('#bSync').onclick=()=>sync();$('#bXls').onclick=exportX;
 $('#fList').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const r=await EPS.importFile(f);E=await EPS.all();$('#st').style.color='var(--ok)';$('#st').textContent=`✅ ${E.length} élève(s) chargé(s)`;close();render()}catch(x){$('#st').style.color='var(--ko)';$('#st').textContent='❌ '+x.message}};
-$('#fJson').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());if(!j.classes)throw new Error('fichier non reconnu');S=j;save();close();render()}catch(x){const m=$('#sm');if(m)m.textContent='❌ '+x.message}};
+$('#fJson').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());const msg=restaurerCarnet(j);close();render();$('#st').style.color='var(--ok)';$('#st').textContent='✅ Carnet restauré.'+msg}catch(x){const m=$('#sm')||$('#st');if(m)m.textContent='❌ '+x.message}};
 
 $('#apsaL').innerHTML=Object.keys(APSA).map(a=>`<option value="${esc(a)}">`).join('');
-(async()=>{try{E=await EPS.all()}catch(x){E=[]}S.view='';render()})();
+(async()=>{try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}try{E=await EPS.all()}catch(x){E=[]}S.view='';render();bakBadge()})();
 if('serviceWorker'in navigator&&/github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>

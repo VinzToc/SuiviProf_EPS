@@ -134,7 +134,7 @@ header .ttl p{margin:4px 0 0;font-size:.7rem;font-weight:600;letter-spacing:.1em
  <span class="msg" id="st"></span>
  <button class="btn b" id="bSync" hidden title="Enregistrer les saisies dans la base Mes Apps EPS">💾 <span class="hide-s">Mes Apps EPS</span></button>
  <button class="btn r" id="bXls" hidden title="Exporter la feuille SuiviProf de la classe (.xlsx)">⬇ <span class="hide-s">.xlsx</span></button>
- <button class="btn r" id="bOrg" hidden title="Organisation : calendrier, créneaux, cycles">📅 <span class="hide-s">Organisation</span></button>
+ <button class="btn r" id="bOrg" hidden title="Organisation annuelle : calendrier, créneaux, cycles">📅 <span class="hide-s">Organisation annuelle</span></button>
  <button class="btn r" id="bSet" title="Réglages, liste élèves, sauvegarde">⚙️</button>
 </header>
 <main>
@@ -292,7 +292,7 @@ function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
  const nbS=c.seances.length;
  let h=`<div class="bar"><h2>${esc(c.nom)}</h2>${c.ca?`<span class="code" title="${esc(CAS[c.ca])}">${c.ca}</span>`:''}<span class="mut">${c.du?'du '+esc(frD(c.du))+' au '+esc(frD(c.au))+' · ':''}${c.seances.filter(s=>done(s)&&hasData(c,s)).length} faite(s) / ${c.seances.filter(s=>!s.annulee).length} prévue(s)</span><button class="btn s r" data-g="ecycle">✏️</button><span class="sp"></span>
   <button class="btn r s" data-g="disp">🩺 Dispenses (${C().disp.length})</button><button class="btn" data-g="seance">＋ Nouvelle séance</button></div>`;
- if(!nbS){v.innerHTML=h+`<div class="empty"><b>Ce cycle ne contient pas encore de séance</b>Créez une séance : l'application ouvre un groupe de colonnes daté (appel, tenue, dispense, infirmerie et comportement par défaut), auquel vous ajoutez les colonnes utiles. Avec des dates de cycle et des créneaux (📅 Organisation), toutes les séances sont générées automatiquement.<div class="bar" style="justify-content:center;margin-top:14px"><button class="btn r" data-g="ecycle">📅 Dates et créneaux du cycle</button><button class="btn" data-g="seance">＋ Nouvelle séance</button></div></div>`;return}
+ if(!nbS){v.innerHTML=h+`<div class="empty"><b>Ce cycle ne contient pas encore de séance</b>Créez une séance : l'application ouvre un groupe de colonnes daté (appel, tenue, dispense, infirmerie et comportement par défaut), auquel vous ajoutez les colonnes utiles. Avec des dates de cycle et des créneaux (📅 Organisation annuelle), toutes les séances sont générées automatiquement.<div class="bar" style="justify-content:center;margin-top:14px"><button class="btn r" data-g="ecycle">📅 Dates et créneaux du cycle</button><button class="btn" data-g="seance">＋ Nouvelle séance</button></div></div>`;return}
  const span=s=>folded(s)||!s.cols.length?1:s.cols.length;
  h+=`<div class="grid"><table><thead><tr class="r1"><th class="st0" rowspan="2">Élève</th><th class="st1" rowspan="2">Classe</th>`
   +c.seances.map((s,i)=>`<th class="sh sg${s.date>today()?' fut':''}${s.annulee?' ann':''}${s.date===today()?' today':''}" data-sid="${s.id}" colspan="${span(s)}"><b>S${i+1} · ${esc(frD(s.date))}${s.heure?' · '+esc(s.heure.replace(':','h')):''}<span class="ac"><button class="btn s r" data-a="addcol" data-s="${s.id}" title="Ajouter une colonne">＋</button><button class="btn s r" data-a="fold" data-s="${s.id}" title="${folded(s)?'Déplier':'Replier'}">${folded(s)?'▸':'▾'}</button><button class="btn s r" data-a="smenu" data-s="${s.id}" title="Séance">⋯</button></span></b><small>${s.annulee?'Annulée '+esc(s.motif||''):esc(s.titre||'')}</small></th>`).join('')
@@ -390,7 +390,7 @@ function confirmBtn(btn,fn){btn.onclick=()=>{if(btn.dataset.ok){fn();return}btn.
 
 function cycleModal(c){const cr=CO().cren;modal(`<h3>${c?'Modifier le cycle':'Nouveau cycle'}</h3><form id="f"><div class="bar" style="margin:0;align-items:flex-end"><label style="flex:1">APSA<input name="nom" list="apsaL" required value="${esc(c?.nom||'')}" placeholder="Choisir dans la liste ou saisir"></label><label>Champ d'apprentissage${caSel(c?.ca||'','name="ca"')}</label></div><p class="help" id="cal">${c?.ca?esc(CAS[c.ca]):''}</p>
  <div class="bar" style="margin:0"><label style="flex:1">Début<input type="date" name="du" value="${c?.du||''}"></label><label style="flex:1">Fin<input type="date" name="au" value="${c?.au||''}"></label></div>
- <label>Créneaux utilisés par ce cycle</label>${cr.length?cr.map(x=>`<label class="chk"><input type="checkbox" name="cr" value="${x.id}" ${!c||!c.cren||c.cren.includes(x.id)?'checked':''}> ${esc(crLab(x))}</label>`).join(''):'<p class="help">Aucun créneau pour cette classe : définissez-les dans 📅 Organisation pour générer les séances automatiquement.</p>'}
+ <label>Créneaux utilisés par ce cycle</label>${cr.length?cr.map(x=>`<label class="chk"><input type="checkbox" name="cr" value="${x.id}" ${!c||!c.cren||c.cren.includes(x.id)?'checked':''}> ${esc(crLab(x))}</label>`).join(''):'<p class="help">Aucun créneau pour cette classe : définissez-les dans 📅 Organisation annuelle pour générer les séances automatiquement.</p>'}
  <p class="help" id="cnt"></p>
  <div class="bar"><button class="btn">${c?'Enregistrer':'Créer'}</button><button type="button" class="btn r" data-m="close">Annuler</button><span class="sp"></span>${c?'<button type="button" class="btn k" id="del">Supprimer</button>':''}</div></form>`,m=>{
  const f=m.querySelector('#f'),ids=()=>[...f.querySelectorAll('[name=cr]:checked')].map(x=>x.value),cal=()=>m.querySelector('#cal').textContent=CAS[f.ca.value]||'';
@@ -508,12 +508,12 @@ async function demo(){const N=[['ELEVE1','Prénom1','F'],['ELEVE2','Prénom2','F
   const cr={id:uid(),jour:dow(d(0)),hd:'10:00',hf:'12:00',sem:'AB'};K.org={cren:[cr],eval:'T'};c.du=d(14);c.au=d(-25);c.cren=[cr.id];[s1,s2,s3].forEach(s=>{s.cren=cr.id;s.heure='10:00';s.gen=1});FER=WK=null;generate(cl,c)}
  save();close();render()}
 
-/* ───── Page Organisation ───── */
+/* ───── Page Organisation annuelle ───── */
 function renderOrg(){const o=O(),K=C(),co=CO(),v=$('#view');v.dataset.cy='';
  const cls=[...new Set(E.map(e=>e.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
  const fer=[...ferMap()].filter(([d])=>d>=o.debut&&d<=o.fin&&dow(d)%6).sort((a,b)=>a[0].localeCompare(b[0]));
  const W=[...weeks()],cycles=[...K.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'));
- let h=`<div class="bar"><h2>📅 Organisation des enseignements</h2><span class="msg" id="om">${esc(OM)}</span><span class="sp"></span><button class="btn r" data-g="carnet">← Carnet</button></div><div class="og">`;OM='';
+ let h=`<div class="bar"><h2>📅 Organisation annuelle</h2><span class="msg" id="om">${esc(OM)}</span><span class="sp"></span><button class="btn r" data-g="carnet">← Carnet</button></div><div class="og">`;OM='';
  h+=`<div class="card" style="grid-column:1/-1"><h3>Classe ${esc(S.classe)} · créneaux et cycles</h3><p class="help">Changez de classe avec la liste en haut de l'écran.</p>
  <label>Créneaux d'EPS de la classe</label>${co.cren.map((c,i)=>`<div class="rw"><select data-k="cr" data-i="${i}" data-p="jour" aria-label="Jour">${[1,2,3,4,5,6].map(j=>`<option value="${j}" ${+c.jour===j?'selected':''}>${JOURS[j]}</option>`).join('')}</select><input type="time" data-k="cr" data-i="${i}" data-p="hd" value="${c.hd}" aria-label="Début"> → <input type="time" data-k="cr" data-i="${i}" data-p="hf" value="${c.hf}" aria-label="Fin"><select data-k="cr" data-i="${i}" data-p="sem" aria-label="Semaines"><option value="AB">toutes les semaines</option><option value="A" ${c.sem==='A'?'selected':''}>semaines A</option><option value="B" ${c.sem==='B'?'selected':''}>semaines B</option></select><button class="btn s k" data-o="cr-rm" data-i="${i}">✕</button></div>`).join('')||'<p class="help">Aucun créneau pour le moment.</p>'}
  <div class="rw"><button class="btn s r" data-o="cr-add">＋ Créneau</button></div>
@@ -535,7 +535,7 @@ function renderOrg(){const o=O(),K=C(),co=CO(),v=$('#view');v.dataset.cy='';
  h+=`<div class="card"><h3>Périodes interruptives</h3>${o.inter.map((x,i)=>`<div class="rw"><span style="flex:1"><b>${esc(x.nom)}</b> · ${esc(frD(x.du))} → ${esc(frD(x.au))}<br><span class="help">${x.classes.length?esc(x.classes.join(', ')):'toutes les classes'}</span></span><button class="btn s k" data-o="int-rm" data-i="${i}">✕</button></div>`).join('')||'<p class="help">Aucune : stages en entreprise, sorties, voyages, examens blancs…</p>'}
  <form id="fint" style="border-top:1px solid var(--bd);margin-top:8px;padding-top:6px"><div class="rw"><input type="text" name="nom" required placeholder="ex : Stage en entreprise" aria-label="Nom"><input type="date" name="du" required aria-label="Du"><input type="date" name="au" required aria-label="Au"></div>
  <label>Classes concernées (aucune cochée = toutes)</label><div class="rw">${cls.map(c=>`<label class="chk" style="margin:0 10px 0 0"><input type="checkbox" name="cl" value="${esc(c)}"> ${esc(c)}</label>`).join('')}</div><button class="btn s">＋ Ajouter la période</button></form>
- <h3 style="margin-top:16px">Périodes d'évaluation</h3>${['T','S'].map(t=>`<label>${t==='T'?'Trimestres':'Semestres'}</label>`+o.per[t].map((p,i)=>`<div class="rw"><span style="width:96px">${esc(p.nom)}</span><input type="date" data-k="per" data-t="${t}" data-i="${i}" data-p="du" value="${p.du}" aria-label="Début"> → <input type="date" data-k="per" data-t="${t}" data-i="${i}" data-p="au" value="${p.au}" aria-label="Fin"></div>`).join('')).join('')}</div>`;
+ <h3 style="margin-top:16px">Périodes d'évaluation</h3>${['T','S'].map(t=>`<label>${t==='T'?'Trimestres':'Semestres'}</label>`+o.per[t].map((p,i)=>`<div class="rw"><span style="width:96px">${esc(p.nom)}</span><input type="date" data-k="per" data-pt="${t}" data-i="${i}" data-p="du" value="${p.du}" aria-label="Début"> → <input type="date" data-k="per" data-pt="${t}" data-i="${i}" data-p="au" value="${p.au}" aria-label="Fin"></div>`).join('')).join('')}</div>`;
  h+=`<div class="card" style="grid-column:1/-1"><h3>Semaines A / B</h3><div class="rw"><span class="help">Semaine de la rentrée :</span><select data-k="ab" aria-label="Semaine de la rentrée"><option ${o.ab==='A'?'selected':''}>A</option><option ${o.ab==='B'?'selected':''}>B</option></select><span class="help">L'alternance saute les semaines de vacances. Touchez une semaine pour inverser l'alternance à partir de celle-ci.</span></div>
  <div class="wks">${W.map(([m,w])=>w.school?`<button class="${w.L}${o.flip.includes(m)?' fl':''}" data-o="flip" data-m="${m}">${esc(frD(m).replace(/^\S+ /,''))}<b>${w.L}</b>${o.flip.includes(m)?'<br><small>↺ bascule</small>':''}</button>`:`<button class="vac" disabled>${esc(frD(m).replace(/^\S+ /,''))}<br><small>vacances</small></button>`).join('')}</div></div></div>`;
  v.innerHTML=h}
@@ -544,7 +544,7 @@ $('#view').addEventListener('change',e=>{const t=e.target;if(t.id==='bper'){C().
  if(k==='zone'){o.zone=val;o.vac=vacDef(val);OM='Vacances remplacées par le calendrier de la zone '+val}
  else if(['debut','fin','ab'].includes(k))o[k]=val;else if(k==='als')o.als=t.checked;else if(k==='pent')o.pent=t.checked;
  else if(k==='vac')o.vac[+t.dataset.i][t.dataset.p]=val;
- else if(k==='per')o.per[t.dataset.t][+t.dataset.i][t.dataset.p]=val;
+ else if(k==='per')o.per[t.dataset.pt][+t.dataset.i][t.dataset.p]=val;
  else if(k==='cr')co.cren[+t.dataset.i][t.dataset.p]=t.dataset.p==='jour'?+val:val;
  else if(k==='eval')co.eval=val;
  else if(k==='cy'){const c=C().cycles.find(x=>x.id===t.dataset.id);c[t.dataset.p]=t.dataset.p==='nom'?val.trim()||c.nom:val;if(t.dataset.p==='nom'&&val in APSA)c.ca=caOf(val)}

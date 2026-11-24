@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.6.5",
+  "date": "2026-11-24",
+  "titre": "Mise à jour du 24 novembre 2026",
+  "items": [
+   "Organisation annuelle : les dates des trimestres et semestres se modifient de nouveau (un clic dans ces champs renvoyait au carnet).",
+   "La page « Organisation » s'appelle désormais « Organisation annuelle »."
+  ]
+ },
+ {
   "v": "0.6.4",
   "date": "2026-11-24",
   "titre": "Mise à jour du 24 novembre 2026",

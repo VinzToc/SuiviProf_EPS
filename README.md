@@ -1,4 +1,4 @@
-# SuiviProf EPS (prototype v0.5)
+# SuiviProf EPS (prototype v0.8)
 Carnet de suivi des séances d'EPS intégré à Mes Apps EPS (identifiant d'application : `suiviprof`).
 - Une classe = un classeur ; un onglet par cycle + un onglet Bilan automatique.
 - Une séance = un groupe de colonnes daté. Par défaut : Appel, Tenue, Dispense, Infirmerie, Comportement (même largeur), puis les colonnes ajoutées (équipe, temps, distance, nombre/note, calcul, texte).
@@ -11,3 +11,8 @@ Carnet de suivi des séances d'EPS intégré à Mes Apps EPS (identifiant d'appl
 
 Dépôt : `VinzToc/SuiviProf_EPS`, publié sur https://vinztoc.github.io/SuiviProf_EPS/ (GitHub Pages).
 Ajouter la ligne de `apps.json-ligne.txt` dans `apps.json` du portail.
+
+## Programmation d'équipe (CoordoEPS)
+- Organisation annuelle → « 📥 Importer la programmation d'équipe » : fichier `.json` produit par CoordoEPS (application du coordonnateur), ou directement depuis CoordoEPS ouvert dans le même navigateur.
+- Choix de l'enseignant (classes cochées automatiquement, créneaux filtrés dans les classes partagées), reprise du calendrier de l'équipe, génération des séances.
+- Créneaux importés marqués `pg:1` (id du coordonnateur), cycles importés marqués `pg:<id du cycle CoordoEPS>` : un réimport met à jour sans dupliquer ; cycles retirés supprimés seulement s'ils n'ont aucune saisie.

@@ -164,6 +164,7 @@ header .ttl p{margin:4px 0 0;font-size:.7rem;font-weight:600;letter-spacing:.1em
 <div class="ov" id="ov" hidden><div class="mo" id="mo"></div></div>
 <input type="file" id="fList" accept=".csv,.xlsx" hidden>
 <input type="file" id="fJson" accept=".json" hidden>
+<input type="file" id="fProg" accept=".json,application/json" hidden>
 <script src="eps-core.js"></script>
 <script>
 {
@@ -270,7 +271,7 @@ function focusSeance(K){const d=today();let nx=null,pv=null;for(const c of K.cyc
   if(s.date>=d){if(!nx||k<nx.k)nx={k,c,s}}else if(!pv||k>pv.k)pv={k,c,s}}return nx||pv}
 const folded=(s,c=cy())=>s.fold!=null?s.fold:s.id!==FOC&&(!!s.annulee||s.date>today()||(s.date<today()&&!hasData(c,s)));
 const done=s=>!s.annulee&&s.date<=today();
-const crLab=c=>`${JOURS[c.jour]} ${c.hd}–${c.hf}${c.sem==='AB'?'':' · sem. '+c.sem}`;
+const crLab=c=>`${JOURS[c.jour]} ${c.hd}–${c.hf}${c.sem==='AB'?'':' · sem. '+c.sem}${c.lieu?' · '+c.lieu:''}`;
 
 /* ───── Nombres, temps, calculs ───── */
 const parseNum=s=>{const n=parseFloat(String(s).replace(',','.'));return isFinite(n)?n:null};
@@ -545,7 +546,7 @@ async function demo(){const N=[['ELEVE1','Prénom1','F'],['ELEVE2','Prénom2','F
 function renderOrg(){const o=O(),cls=allCls(),oc=orgCl(),v=$('#view');v.dataset.cy='';const K=oc?KL(oc):{cycles:[]},co=oc?CO(oc):{cren:[],eval:'T'};
  const fer=[...ferMap()].filter(([d])=>d>=o.debut&&d<=o.fin&&dow(d)%6).sort((a,b)=>a[0].localeCompare(b[0]));
  const W=[...weeks()],cycles=[...K.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'));
- let h=`<div class="bar"><h2>📅 Organisation annuelle</h2><span class="msg" id="om">${esc(OM)}</span></div><p class="help" style="margin-top:-4px">Réglages communs à toute l'année et à toutes les classes (calendrier, périodes, semaines A/B), puis, plus bas, créneaux et cycles de chaque classe.</p><div class="og">`;OM='';
+ let h=`<div class="bar"><h2>📅 Organisation annuelle</h2><span class="msg" id="om">${esc(OM)}</span><span class="sp"></span><button class="btn b" data-o="imp" title="Fichier préparé par le coordonnateur avec CoordoEPS">📥 Importer la programmation d'équipe</button></div>${S.prog?`<p class="help" style="margin-top:-4px">📥 Programmation d'équipe ${esc(S.prog.etab||'')} ${esc(S.prog.annee||'')}${S.prog.auteur?' (coordonnateur : '+esc(S.prog.auteur)+')':''} importée le ${esc(new Date(S.prog.date).toLocaleDateString('fr-FR'))}. Un nouvel import met les cycles à jour sans effacer les séances saisies.</p>`:''}<p class="help" style="margin-top:-4px">Réglages communs à toute l'année et à toutes les classes (calendrier, périodes, semaines A/B), puis, plus bas, créneaux et cycles de chaque classe.</p><div class="og">`;OM='';
  const ovw=cls.map(cl=>{const k=KL(cl),c2=CO(cl),cy2=[...k.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'));
    return `<tr data-o="ocl" data-c="${esc(cl)}" class="${cl===oc?'on':''}"><td><b>${esc(cl)}</b></td><td>${c2.cren.map(x=>esc(crLab(x))).join('<br>')||'<span class="help">aucun</span>'}</td><td>${c2.eval==='S'?'Semestres':'Trimestres'}</td>
    <td>${cy2.map(c=>`${esc(cyName(c))}${c.du?` <span class="help">${esc(frD(c.du).replace(/^\S+ /,''))} → ${esc(frD(c.au).replace(/^\S+ /,''))}</span>`:''}`).join('<br>')||'<span class="help">aucun cycle</span>'}</td><td>${cy2.reduce((n,c)=>n+c.seances.length,0)}</td></tr>`}).join('');
@@ -586,7 +587,7 @@ $('#view').addEventListener('change',e=>{const t=e.target;if(t.id==='bper'){C().
  else if(k==='cy'){const c=K.cycles.find(x=>x.id===t.dataset.id);c[t.dataset.p]=t.dataset.p==='nom'?val.trim()||c.nom:val;if(t.dataset.p==='nom'&&val in APSA)c.ca=caOf(val)}
  else if(k==='cyc-cr'){const c=K.cycles.find(x=>x.id===t.dataset.id);c.cren=(c.cren||[]).filter(x=>x!==val);if(t.checked)c.cren.push(val)}
  save();render()});
-$('#view').addEventListener('click',async e=>{const b=e.target.closest('[data-o]');if(!b)return;const a=b.dataset.o,o=O(),oc=orgCl(),K=KL(oc),co=CO(oc);
+$('#view').addEventListener('click',async e=>{const b=e.target.closest('[data-o]');if(!b)return;const a=b.dataset.o;if(a==='imp')return progSrc();const o=O(),oc=orgCl(),K=KL(oc),co=CO(oc);
  if(a==='ocl'){S.orgCl=b.dataset.c;save();render();const c=document.querySelector('.ocl');c&&c.scrollIntoView({block:'start',behavior:'smooth'});return}
  if(/-rm$/.test(a)&&!b.dataset.ok){b.dataset.ok=1;b.textContent='Supprimer ?';return}
  if(a==='cr-add'){const l=co.cren[co.cren.length-1];co.cren.push({id:uid(),jour:l?l.jour:1,hd:l?l.hd:'08:00',hf:l?l.hf:'10:00',sem:'AB'})}
@@ -605,6 +606,48 @@ $('#view').addEventListener('click',async e=>{const b=e.target.closest('[data-o]
  save();render()});
 $('#view').addEventListener('submit',e=>{if(e.target.id!=='fint')return;e.preventDefault();const f=e.target;
  O().inter.push({id:uid(),nom:f.nom.value.trim(),du:f.du.value,au:f.au.value<f.du.value?f.du.value:f.au.value,classes:[...f.querySelectorAll('[name=cl]:checked')].map(x=>x.value)});OM='✅ Période ajoutée : pensez à régénérer les séances';save();render()});
+
+
+/* ───── Import de la programmation d'équipe (CoordoEPS, application du coordonnateur) ─────
+   Fichier { format:'CoordoEPS', org, profs, inst, classes:{ cl:{prof, eval, cren:[{id,jour,hd,hf,sem,inst,prof}], cycles:[{id,nom,ca,du,au,cren,inst}]} } }
+   Les créneaux gardent l'id du coordonnateur (marqués pg) ; chaque cycle importé garde l'id d'origine dans « pg » : un nouvel import met à jour au lieu de dupliquer. */
+const PROG_LS='CoordoEPS_v1';
+function progSrc(){let loc=null;try{loc=JSON.parse(localStorage.getItem(PROG_LS))}catch(e){}
+ modal(`<h3>📥 Importer la programmation d'équipe</h3><p class="help">Le coordonnateur EPS prépare avec <b>CoordoEPS</b> un fichier .json : calendrier de l'équipe, créneaux et cycles de chaque classe. Vous choisissez votre nom et vos classes ; les séances déjà saisies sont conservées.</p>
+ <div class="bar"><button class="btn b" id="pfi">📂 Choisir le fichier .json</button>${loc&&loc.classes&&Object.keys(loc.classes).length?'<button class="btn r" id="plo">Depuis CoordoEPS sur cet appareil</button>':''}<span class="sp"></span><button class="btn r" data-m="close">Annuler</button></div><p class="msg" id="pm"></p>`,m=>{
+  m.querySelector('#pfi').onclick=()=>$('#fProg').click();const l=m.querySelector('#plo');if(l)l.onclick=()=>progModal({...loc,format:'CoordoEPS'})})}
+$('#fProg').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());if(j.format!=='CoordoEPS'||!j.classes)throw new Error("ce fichier n'est pas une programmation CoordoEPS");progModal(j)}catch(x){const m=$('#pm');if(m){m.style.color='var(--ko)';m.textContent='❌ '+x.message}}};
+function progModal(P){const pr=P.profs||[],pnm=id=>{const p=pr.find(x=>x.id===id);return p?(p.nom+' '+(p.prenom||'')).trim():''},mine=allCls();
+ const cls=Object.keys(P.classes).filter(cl=>{const k=P.classes[cl];return(k.cren||[]).length||(k.cycles||[]).length}).sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
+ const teach=(pid,cl)=>{const k=P.classes[cl];return k.prof===pid||(k.cren||[]).some(c=>c.prof===pid)};
+ modal(`<h3>📥 Programmation ${esc(P.etab||'de l\'équipe')} ${esc(P.annee||'')}</h3><p class="help">Préparée par ${esc(P.auteur||'le coordonnateur')}${P.genere?' le '+esc(new Date(P.genere).toLocaleDateString('fr-FR')):''} · ${cls.length} classe(s) programmée(s).</p>
+ <form id="f"><label>Je suis<select name="me"><option value="">— toute l'équipe (toutes les classes) —</option>${pr.map(p=>`<option value="${esc(p.id)}">${esc(pnm(p.id))}</option>`).join('')}</select></label>
+ <label>Classes à importer</label><div class="refs" id="pcl" style="max-height:260px"></div>
+ <label class="chk"><input type="checkbox" name="cal" checked> Reprendre le calendrier de l'équipe (année, vacances, fériés, semaines A/B, interruptions, trimestres/semestres)</label>
+ <label class="chk"><input type="checkbox" name="gen" checked> Générer les séances des cycles importés</label>
+ <p class="help">Les créneaux et cycles importés remplacent ceux d'un import précédent ; vos cycles créés à la main et toutes vos saisies sont conservés. Un cycle retiré par le coordonnateur n'est supprimé que s'il ne contient aucune saisie.</p>
+ <div class="bar"><button class="btn">📥 Importer</button><span class="sp"></span><button type="button" class="btn r" data-m="close">Annuler</button></div><p class="msg" id="pm"></p></form>`,m=>{
+  const f=m.querySelector('#f'),draw=()=>{const me=f.me.value;m.querySelector('#pcl').innerHTML=cls.map(cl=>{const k=P.classes[cl];return `<label class="chk"><input type="checkbox" name="cl" value="${esc(cl)}" ${!me||teach(me,cl)?'checked':''}> <b>${esc(cl)}</b> <span class="help">${esc(pnm(k.prof)||'—')} · ${(k.cren||[]).length} créneau(x) · ${(k.cycles||[]).length} cycle(s)${mine.includes(cl)?'':' · ⚠ absente de votre liste d\'élèves'}</span></label>`}).join('')||'<p class="help">Aucune classe programmée dans ce fichier.</p>'};
+  const me0=P.pour||S.progMoi||'';if(pr.some(p=>p.id===me0))f.me.value=me0;f.me.onchange=draw;draw();
+  f.onsubmit=e=>{e.preventDefault();const L=[...f.querySelectorAll('[name=cl]:checked')].map(x=>x.value);if(!L.length){m.querySelector('#pm').textContent='⚠ Cochez au moins une classe';return}
+   S.progMoi=f.me.value;const r=applyProg(P,f.me.value,L,f.cal.checked,f.gen.checked);
+   OM=`✅ ${L.length} classe(s) importée(s) : ${r.nc} cycle(s) créé(s), ${r.nu} mis à jour${r.nd?', '+r.nd+' retiré(s)':''}${f.gen.checked?', '+r.ad+' séance(s) ajoutée(s)':''}`;
+   if(!S.orgCl||!L.includes(S.orgCl))S.orgCl=L.find(c=>mine.includes(c))||S.orgCl;if(!L.includes(S.classe)&&!(S.classes[S.classe]?.cycles||[]).length){const c=L.find(c=>mine.includes(c));if(c)S.classe=c}
+   S.view='org';save();close();render()}})}
+function applyProg(P,me,L,cal,gen){const inst=id=>(P.inst||[]).find(i=>i.id===id)?.nom||'';let nc=0,nu=0,nd=0,ad=0;
+ if(cal&&P.org){S.org=JSON.parse(JSON.stringify(P.org));const o=O();o.flip=o.flip||[];o.inter=o.inter||[];o.vac=o.vac||[]}FER=WK=null;
+ for(const cl of L){const src=P.classes[cl];if(!src)continue;const K=KL(cl),co=CO(cl);
+  let cr=src.cren||[],part=false;if(me){const x=cr.filter(c=>(c.prof||src.prof)===me);if(x.length&&x.length<cr.length){cr=x;part=true}}
+  const ids=new Set(cr.map(c=>c.id));if(src.eval)co.eval=src.eval;
+  co.cren=[...co.cren.filter(c=>!c.pg&&!ids.has(c.id)),...cr.map(c=>({id:c.id,jour:+c.jour,hd:c.hd,hf:c.hf,sem:c.sem||'AB',lieu:inst(c.inst),pg:1}))];
+  const keep=new Set();
+  for(const s of src.cycles||[]){const cc=(s.cren||[]).filter(id=>ids.has(id));if(part&&!cc.length)continue;keep.add(s.id);
+   let c=K.cycles.find(x=>x.pg===s.id);if(c)nu++;else{c={id:uid(),pg:s.id,seq:0,seances:[],vals:{}};K.cycles.push(c);nc++}
+   Object.assign(c,{nom:s.nom||'Cycle',ca:s.ca||'',du:s.du||'',au:s.au||'',cren:cc,lieu:inst(s.inst)||[...new Set(cr.filter(x=>cc.includes(x.id)).map(x=>inst(x.inst)).filter(Boolean))].join(' / ')})}
+  K.cycles=K.cycles.filter(c=>{if(!c.pg||keep.has(c.pg))return true;if(c.seances.some(s=>hasData(c,s)))return true;nd++;return false});
+  if(K.tab&&!K.cycles.some(c=>c.id===K.tab))K.tab=null;
+  if(gen)for(const c of K.cycles)if(c.pg&&c.du&&c.au&&c.cren.length)ad+=generate(cl,c).add}
+ S.prog={etab:P.etab||'',annee:P.annee||'',auteur:P.auteur||'',genere:P.genere||'',date:new Date().toISOString()};return{nc,nu,nd,ad}}
 
 /* ───── Événements ───── */
 document.addEventListener('click',e=>{const n=e.target.closest('[data-nav]');if(!n)return;const v=n.dataset.nav;if(v==='set')return setModal();

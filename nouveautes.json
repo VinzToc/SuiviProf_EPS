@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.8.0",
+  "date": "2026-11-24",
+  "titre": "Mise à jour du 24 novembre 2026",
+  "items": [
+   "Organisation annuelle : nouveau bouton « 📥 Importer la programmation d'équipe ». Le fichier préparé par le coordonnateur avec CoordoEPS crée le calendrier, les créneaux et les cycles de vos classes, puis génère les séances.",
+   "Choisissez votre nom : seules vos classes (et vos créneaux dans une classe partagée) sont cochées.",
+   "Un nouvel import met à jour les cycles déjà importés sans effacer les séances saisies ; vos cycles créés à la main sont conservés.",
+   "Les créneaux affichent l'installation prévue par le coordonnateur."
+  ]
+ },
+ {
   "v": "0.7.1",
   "date": "2026-11-24",
   "titre": "Mise à jour du 24 novembre 2026",

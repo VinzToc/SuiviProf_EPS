@@ -224,6 +224,8 @@ const cyName=c=>(c.ca?c.ca+' · ':'')+c.nom;
 let S={v:1,classe:'',classes:{}},E=[];
 try{const j=JSON.parse(localStorage.getItem(LS)||localStorage.getItem('ProfNoteEPS_carnet_v1'));if(j&&j.classes)S=j}catch(e){}
 let syncT;
+/* Carnet modifié par une autre appli de la même adresse (transfert depuis CompEval) dans un autre onglet : on recharge pour ne pas l'écraser */
+window.addEventListener('storage',ev=>{if(ev.key!==LS||!ev.newValue)return;try{const j=JSON.parse(ev.newValue);if(j&&j.classes){S=j;FER=WK=null;render()}}catch(e){}});
 function save(){FER=WK=null;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}clearTimeout(syncT);syncT=setTimeout(()=>sync(true),2500)}
 const C=()=>S.classes[S.classe]||(S.classes[S.classe]={cycles:[],disp:[],tab:null});
 const cy=()=>C().cycles.find(c=>c.id===C().tab);

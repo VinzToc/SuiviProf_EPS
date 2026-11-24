@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.12.4",
+  "date": "2026-11-24",
+  "titre": "Évaluations reçues de CompEval",
+  "items": [
+   "CompEval peut désormais transférer ses évaluations dans la séance de même date : elles apparaissent dans une colonne « Grille CompEval » du carnet.",
+   "Si SuiviProf est ouvert dans un autre onglet pendant un transfert, le carnet se met à jour aussitôt, sans écraser les évaluations reçues."
+  ]
+ },
+ {
   "v": "0.12.3",
   "date": "2026-11-24",
   "titre": "Noms des élèves lisibles",

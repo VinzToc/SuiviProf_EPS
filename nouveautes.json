@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.13.1",
+  "date": "2026-11-24",
+  "titre": "Boutons de séance plus visibles",
+  "items": [
+   "En-tête de séance : bouton « ＋ » (ajouter une colonne) sur fond bleu et bouton « ⋯ » (options de la séance) sur fond bleu-vert, bien visibles même sur les séances à venir."
+  ]
+ },
+ {
   "v": "0.13.0",
   "date": "2026-11-24",
   "titre": "Évaluations envoyées à CompEval",

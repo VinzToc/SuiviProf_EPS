@@ -58,7 +58,11 @@ tfoot .st0,tfoot .st1{z-index:5}
 .sh{min-width:120px;text-align:left;padding:4px 8px}
 .sh b{display:block;font-size:.9rem;color:var(--c3)}
 .sh small{color:var(--mut);display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis}
-.sh .ac{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+.sh .ac{display:inline-flex;gap:6px;margin-left:8px;vertical-align:middle;align-items:center}
+.sh .ac .btn{min-height:38px;padding:4px 10px;border-radius:10px;font-size:.84rem;background:rgba(46,211,160,.16);border:1.5px solid rgba(46,211,160,.7);color:#fff;box-shadow:none}
+.sh .ac .btn:hover{background:rgba(46,211,160,.32)}
+.sh .ac .ico{min-width:40px;font-size:1.35rem;font-weight:900;line-height:1;padding:2px 8px}
+.ch.add{font-size:1.5rem;font-weight:900;border:1.5px dashed rgba(46,211,160,.7);border-radius:10px;min-width:44px;min-height:40px}
 .ch{font:inherit;font-size:.78rem;font-weight:700;color:var(--tx);background:none;border:0;cursor:pointer;padding:4px 2px;line-height:1.15}
 .ch small{display:block;color:var(--mut);font-weight:600;font-size:.68rem}
 .ch.add{color:var(--c3);font-size:1.1rem;padding:6px 10px}
@@ -66,7 +70,7 @@ tfoot .st0,tfoot .st1{z-index:5}
 .nm b{font-weight:800}
 .ck{width:100%;min-width:44px;min-height:36px;border:0;border-radius:8px;background:rgba(255,255,255,.04);color:var(--tx);font:inherit;font-weight:900;font-size:.95rem;cursor:pointer}
 .ck.auto{font-style:italic;opacity:.75;outline:1px dashed #6fb7ff}
-.vP,.v\+{background:#1d6b3f;color:#d9ffe7}.vA,.vI{background:#8f1d1d;color:#ffe0e0}.vR,.v−{background:#d4a514;color:#1d1a05}
+.vVS{background:#3f5f8f;color:#e6efff;font-size:.82rem}.vP,.v\+{background:#1d6b3f;color:#d9ffe7}.vA,.vI{background:#8f1d1d;color:#ffe0e0}.vR,.v−{background:#d4a514;color:#1d1a05}
 .vDT{background:#1d4f9f;color:#e0ecff}.vDP{background:#2c6fb8;color:#e0ecff}.vIN{background:#4b3a9f;color:#ece6ff}
 .vX{background:#7b52d6;color:#fff}
 .in{width:84px;padding:6px 7px;border-radius:8px;font-size:15px;text-align:right}
@@ -112,6 +116,8 @@ td.fut,.fut>b,.fut>small,.fut .fold{opacity:.45}
 .gk{width:100%;height:100%;min-height:56px;min-width:110px;border:1.5px solid var(--lc);border-radius:9px;background:color-mix(in srgb,var(--lc) 14%,transparent);color:var(--tx);font:inherit;font-size:.76rem;cursor:pointer;padding:6px;text-align:left;line-height:1.25}
 .gk.on{background:var(--lc);color:var(--lt);font-weight:800;box-shadow:inset 0 0 0 2px #fff}
 .gn{font-size:.95rem;margin:10px 0 4px}
+.ci{display:block;font-size:1.6rem;line-height:1.15;margin:0 auto 3px;text-align:center;font-style:normal}
+.mt td{white-space:normal}.mt th small{color:var(--mut);font-weight:600}textarea.app{width:100%;min-width:260px;min-height:54px;font-size:14px;padding:6px 8px;resize:vertical;line-height:1.35}
 .btn.fd{display:block;margin:4px auto 2px;width:100%;min-height:36px;background:linear-gradient(135deg,#1976d2,#16b3a8 60%,#34c759);box-shadow:0 3px 10px #16b3a840;font-size:.82rem}
 th.cur{box-shadow:inset 0 -3px 0 var(--c1)}th.sh.cur.fut{box-shadow:inset 0 -3px 0 var(--c2)}th.sh.cur.fut b::after{content:' ● prochaine séance';color:#6fb7ff}th.sh.cur b::after{content:' ● séance en cours';color:var(--c1);font-size:.7rem;font-weight:800}.ann{opacity:.4;text-decoration:line-through}th.today{box-shadow:inset 0 -3px 0 var(--ok)}
 .og{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:12px}.og .card{margin:0}
@@ -188,7 +194,7 @@ const frD=s=>{if(!s)return'';const d=new Date(s+'T12:00');return d.toLocaleDateS
 
 /* ───── Types de colonnes : chacun porte sa catégorie de bilan ───── */
 const TYPES={
- appel:{l:'Appel',n:'Appel',i:'✅',cat:'Assiduité',k:'cycle',st:['','P','A','R'],lab:{P:'Présent',A:'Absent',R:'Retard'}},
+ appel:{l:'Appel',n:'Appel',i:'✅',cat:'Assiduité',k:'cycle',st:['','P','A','R','VS'],lab:{P:'Présent',A:'Absent',R:'Retard',VS:'Absent (saisi par la vie scolaire)'}},
  tenue:{l:'Oubli de tenue',n:'Tenue',i:'👕',cat:'Tenue',k:'toggle',on:'X',lab:'Oubli de tenue'},
  infirmerie:{l:'Infirmerie',n:'Infirm.',i:'🩹',cat:'Infirmerie',k:'toggle',on:'I',lab:'Passage infirmerie'},
  dispense:{l:'Dispense',n:'Disp.',i:'🩺',cat:'Dispense',k:'cycle',st:['','DT','DP','IN'],lab:{DT:'Dispense totale',DP:'Dispense partielle',IN:'Inaptitude'}},
@@ -362,10 +368,10 @@ function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
  if(!nbS){v.innerHTML=h+`<div class="empty"><b>Ce cycle ne contient pas encore de séance</b>Créez une séance : l'application ouvre un groupe de colonnes daté (appel, tenue, dispense, infirmerie et comportement par défaut), auquel vous ajoutez les colonnes utiles. Avec des dates de cycle et des créneaux (📅 Organisation annuelle), toutes les séances sont générées automatiquement.<div class="bar" style="justify-content:center;margin-top:14px"><button class="btn r" data-g="ecycle">📅 Dates et créneaux du cycle</button><button class="btn" data-g="seance">＋ Nouvelle séance</button></div></div>`;return}
  const span=s=>folded(s)||!s.cols.length?1:s.cols.length;
  h+=`<div class="grid main"><table><thead><tr class="r1"><th class="st0" rowspan="2">Élève</th><th class="st1" rowspan="2">Classe</th>`
-  +c.seances.map((s,i)=>`<th class="sh sg${s.date>today()?' fut':''}${s.annulee?' ann':''}${s.date===today()?' today':''}${s.id===FOC?' cur':''}" data-sid="${s.id}" colspan="${span(s)}"><b>S${i+1} · ${esc(frD(s.date))}${s.heure?' · '+esc(s.heure.replace(':','h')):''}<span class="ac"><button class="btn s r" data-a="addcol" data-s="${s.id}" title="Ajouter une colonne">＋</button>${folded(s)?'':`<button class="btn s r" data-a="fold" data-s="${s.id}" title="Replier la séance">▾ Replier</button>`}<button class="btn s r" data-a="smenu" data-s="${s.id}" title="Séance">⋯</button></span></b><small>${s.annulee?'Annulée '+esc(s.motif||''):esc(s.titre||'')}</small></th>`).join('')
+  +c.seances.map((s,i)=>`<th class="sh sg${s.date>today()?' fut':''}${s.annulee?' ann':''}${s.date===today()?' today':''}${s.id===FOC?' cur':''}" data-sid="${s.id}" colspan="${span(s)}"><b>S${i+1} · ${esc(frD(s.date))}${s.heure?' · '+esc(s.heure.replace(':','h')):''}<span class="ac"><button class="btn s r ico" data-a="addcol" data-s="${s.id}" title="Ajouter une colonne" aria-label="Ajouter une colonne">＋</button>${folded(s)?'':`<button class="btn s r" data-a="fold" data-s="${s.id}" title="Replier la séance">▾ Replier</button>`}<button class="btn s r ico" data-a="smenu" data-s="${s.id}" title="Date, intitulé, annulation de la séance" aria-label="Options de la séance">⋯</button></span></b><small>${s.annulee?'Annulée '+esc(s.motif||''):esc(s.titre||'')}</small></th>`).join('')
   +`</tr><tr class="r2">`
   +c.seances.map(s=>folded(s)||!s.cols.length?`<th class="sg${s.date>today()?' fut':''}">${folded(s)?`<span class="fold">${s.annulee?'annulée':s.date>today()?'à venir':hasData(c,s)?'repliée':'non saisie'}</span><button class="btn s fd" data-a="fold" data-s="${s.id}" title="Afficher les colonnes de la séance">▸ Déplier</button>`:`<button class="ch add" data-a="addcol" data-s="${s.id}">＋</button>`}</th>`
-   :s.cols.map((col,j)=>`<th class="${j?'':'sg'}${MARK.includes(col.type)?' mk':''}"><button class="ch" data-a="col" data-s="${s.id}" data-c="${col.id}" title="Modifier la colonne">${T(col).i} ${esc(col.nom)}<small><span class="code">${col.code}</span>${MARK.includes(col.type)?'':' '+esc(col.cat)}</small></button>${col.type==='appel'?`<br><button class="btn s b" data-a="allp" data-c="${col.id}">Tous P</button>`:''}</th>`).join('')).join('')
+   :s.cols.map((col,j)=>`<th class="${j?'':'sg'}${MARK.includes(col.type)?' mk':''}"><button class="ch" data-a="col" data-s="${s.id}" data-c="${col.id}" title="Modifier la colonne"><span class="ci">${T(col).i}</span>${esc(col.nom)}<small><span class="code">${col.code}</span>${MARK.includes(col.type)?'':' '+esc(col.cat)}</small></button>${col.type==='appel'?`<br><button class="btn s b" data-a="allp" data-c="${col.id}">Tous P</button>`:''}</th>`).join('')).join('')
   +`</tr></thead><tbody>`
   +L.map(e=>`<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td><td class="st1">${esc(e.classe)}</td>`
    +c.seances.map(s=>folded(s)||!s.cols.length?`<td class="sg fold${s.date>today()?' fut':''}">${esc(s.cols.map(col=>txtShort(c,s,col,e.id)).filter(Boolean).join(' · '))}</td>`:s.cols.map((col,j)=>cell(c,s,col,e,j)).join('')).join('')+'</tr>').join('')
@@ -403,7 +409,17 @@ function refreshLive(){const c=cy(),L=pupils();document.querySelectorAll('[data-
  const f=$('#tf');if(f)f.innerHTML=foot(c,L)}
 
 /* ───── Bilan de la classe ───── */
-function agg(e,R){const a={se:0,P:0,A:0,R:0,ten:0,inf:0,dis:0,pl:0,mo:0,inc:0,obs:0};
+/* ───── Notes et moyennes : colonnes notées = grilles CompEval et colonnes « Nombre / note » ayant une valeur « Sur » ;
+   chaque note est ramenée sur 20 et pondérée par le coefficient de sa colonne ───── */
+const isNote=col=>col.type==='grille'||(col.type==='nombre'&&gN(col.o.max)>0);
+const noteSur=col=>col.type==='grille'?(gN(col.o.g&&col.o.g.sur)||20):gN(col.o.max);
+const coefOf=col=>col.o.coef==null||col.o.coef===''?1:gN(col.o.coef);
+function notes(K,eid,P){const out=[];for(const c of K.cycles)for(const s of c.seances){if(s.annulee||P&&(s.date<P.du||s.date>P.au))continue;
+ for(const col of s.cols){if(!isNote(col))continue;const v=numv(c,col,eid),k=coefOf(col);if(v==null||!(k>0))continue;out.push({c,s,col,n20:v/noteSur(col)*20,coef:k})}}return out}
+const moy=L=>{const w=L.reduce((a,x)=>a+x.coef,0);return w?L.reduce((a,x)=>a+x.n20*x.coef,0)/w:null};
+const f20=v=>v==null?'–':(Math.round(v*100)/100).toLocaleString('fr-FR',{maximumFractionDigits:2});
+const perOf=cl=>{const ev=CO(cl).eval==='S'?'S':'T';return O().per[ev].map((p,i)=>Object.assign({key:ev+i},p))};
+function agg(e,R){const a={se:0,P:0,A:0,R:0,VS:0,ten:0,inf:0,dis:0,pl:0,mo:0,inc:0,obs:0};
  for(const c of C().cycles)for(const s of c.seances){if(!done(s)||R&&(s.date<R.du||s.date>R.au)||!hasData(c,s))continue;a.se++;let d='';
   for(const col of s.cols){const v=raw(c,col,e.id);
    if(col.type==='appel'&&v)a[v]++;else if(col.type==='tenue'&&v)a.ten++;else if(col.type==='infirmerie'&&v)a.inf++;
@@ -415,17 +431,26 @@ function agg(e,R){const a={se:0,P:0,A:0,R:0,ten:0,inf:0,dis:0,pl:0,mo:0,inc:0,ob
 function caAgg(e,R){const o={};for(const c of C().cycles){if(!c.ca)continue;const x=o[c.ca]||(o[c.ca]={se:0,pr:0,dis:0,ab:0});
  for(const s of c.seances){if(!done(s)||!hasData(c,s)||R&&(s.date<R.du||s.date>R.au))continue;x.se++;let ap='',d='';
   for(const col of s.cols){const v=raw(c,col,e.id);if(col.type==='appel'&&v)ap=v;if(col.type==='dispense'&&v)d=v}
-  if(d||dispAuto(e.id,s.date))x.dis++;else if(ap==='P'||ap==='R')x.pr++;else if(ap==='A')x.ab++}}return o}
+  if(d||dispAuto(e.id,s.date))x.dis++;else if(ap==='P'||ap==='R')x.pr++;else if(ap==='A'||ap==='VS')x.ab++}}return o}
 function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().per[CO().eval==='S'?'S':'T'],R=K.bper!=null&&K.bper!=='an'?PS[+K.bper]:null,A=L.map(e=>[e,agg(e,R)]);
- const H=[['se','Séances'],['P','Présent'],['A','Absent'],['R','Retard'],['ten','👕 Tenue'],['inf','🩹 Infirm.'],['dis','🩺 Disp.'],['pl','⚖️ +'],['mo','⚖️ −'],['inc','⚠ Incid.'],['obs','📝 Obs.']];
- const mx=k=>Math.max(1,...A.map(x=>x[1][k])),warm={A:'255,90,90',R:'240,195,40',ten:'140,100,255',inf:'120,170,255',dis:'90,140,255',pl:'90,220,140',mo:'240,195,40',inc:'255,80,80',obs:'80,200,230'};
+ const H=[['se','Séances','📅'],['P','Présent','✅'],['A','Absent','❌'],['VS','Abs. VS','🏫'],['R','Retard','⏰'],['ten','Tenue','👕'],['inf','Infirm.','🩹'],['dis','Disp.','🩺'],['pl','Comport. +','👍'],['mo','Comport. −','👎'],['inc','Incidents','⚠️'],['obs','Obs.','📝']];
+ const mx=k=>Math.max(1,...A.map(x=>x[1][k])),warm={VS:'110,140,210',A:'255,90,90',R:'240,195,40',ten:'140,100,255',inf:'120,170,255',dis:'90,140,255',pl:'90,220,140',mo:'240,195,40',inc:'255,80,80',obs:'80,200,230'};
  let h=`<div class="bar"><h2>Bilan · ${esc(S.classe)}</h2><select id="bper" aria-label="Période"><option value="an">Année</option>${PS.map((p,i)=>`<option value="${i}" ${String(K.bper)===String(i)?'selected':''}>${esc(p.nom)}</option>`).join('')}</select><span class="mut">${R?'du '+esc(frD(R.du))+' au '+esc(frD(R.au))+' · ':''}${A[0]?.[1].se??0} séance(s) faite(s) · cliquez sur un élève pour sa synthèse</span></div>`;
- h+=`<div class="grid" style="max-height:none"><table class="bt"><thead><tr class="r1"><th class="st0">Élève</th><th class="st1">Classe</th>${H.map(x=>`<th>${x[1]}</th>`).join('')}<th>Assiduité</th></tr></thead><tbody>`
-  +A.map(([e,a])=>{const pr=a.P+a.R+a.A?Math.round(100*(a.P+a.R)/(a.P+a.R+a.A)):null;
+ h+=`<div class="grid" style="max-height:none"><table class="bt"><thead><tr class="r1"><th class="st0">Élève</th><th class="st1">Classe</th>${H.map(x=>`<th><span class="ci">${x[2]}</span>${x[1]}</th>`).join('')}<th><span class="ci">📈</span>Assiduité</th></tr></thead><tbody>`
+  +A.map(([e,a])=>{const ab=a.A+a.VS,pr=a.P+a.R+ab?Math.round(100*(a.P+a.R)/(a.P+a.R+ab)):null;
    return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td><td class="st1">${esc(e.classe)}</td>`
    +H.map(([k])=>{const n=a[k];return k==='se'||k==='P'?`<td>${n}</td>`:n?`<td class="h" style="background:rgba(${warm[k]},${(.15+.5*n/mx(k)).toFixed(2)})">${n}</td>`:'<td class="z">–</td>'}).join('')
    +`<td>${pr==null?'–':pr+' %'}</td></tr>`}).join('')
   +`</tbody><tfoot><tr><td class="st0">Total</td><td class="st1"></td>${H.map(([k])=>`<td>${k==='se'?(A[0]?.[1].se??0):A.reduce((s,x)=>s+x[1][k],0)}</td>`).join('')}<td></td></tr></tfoot></table></div>`;
+ const pk=R?(CO().eval==='S'?'S':'T')+K.bper:'an',CC=((K.cc=K.cc||{})[pk]=K.cc[pk]||{}),pl=R?R.nom:'Année',prov=R&&R.au>today();
+ const NT=L.map(e=>[e,notes(K,e.id,R)]),cyN=[...K.cycles].filter(c=>NT.some(([,l])=>l.some(x=>x.c===c))).sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'));
+ const cm=f=>{const ms=NT.map(([,l])=>moy(f(l))).filter(x=>x!=null);return ms.length?f20(ms.reduce((a,b)=>a+b,0)/ms.length):'–'};
+ h+=`<div class="card"><h3>Moyennes et appréciations · ${esc(pl)}</h3><p class="help">${R?`Notes du ${esc(frD(R.du))} au ${esc(frD(R.au))} (dates de l'Organisation annuelle), tous cycles confondus${prov?' · période en cours : moyennes provisoires':''}`:"Toutes les notes de l'année"}. Notes prises en compte : grilles CompEval et colonnes « Nombre / note » ayant une valeur « Sur », ramenées sur 20 et pondérées par leur coefficient. La moyenne de la période cumule toutes ces notes.</p>
+ <div class="grid" style="max-height:none"><table class="mt"><thead><tr class="r1"><th class="st0">Élève</th>${cyN.map(c=>`<th title="${esc(CAS[c.ca]||'')}">${esc(cyName(c))}<br><small>moyenne /20</small></th>`).join('')}<th>Moyenne ${esc(pl)}<br><small>/20</small></th><th>Appréciation du conseil de classe · ${esc(pl)}</th></tr></thead><tbody>`
+  +NT.map(([e,l])=>{const g=moy(l);return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td>`
+   +cyN.map(c=>{const lc=l.filter(x=>x.c===c),m=moy(lc);return m==null?'<td class="z">–</td>':`<td title="${esc(lc.map(x=>x.col.nom+' ('+frD(x.s.date)+') : '+f20(x.n20)+'/20'+(x.coef!==1?' × '+x.coef:'')).join('\n'))}">${f20(m)} <small class="help">(${lc.length} note${lc.length>1?'s':''})</small></td>`}).join('')
+   +`<td class="h">${g==null?'<span class="help">–</span>':`<b>${f20(g)}</b>`}</td><td><textarea class="app" data-app="${esc(e.id)}" data-pk="${pk}" rows="2" placeholder="Appréciation…">${esc(CC[e.id]||'')}</textarea></td></tr>`}).join('')
+  +`</tbody><tfoot><tr><td class="st0">Moyenne de la classe</td>${cyN.map(c=>`<td>${cm(l=>l.filter(x=>x.c===c))}</td>`).join('')}<td>${cm(l=>l)}</td><td></td></tr></tfoot></table></div>${cyN.length?'':'<p class="help">Aucune note sur cette période.</p>'}</div>`;
  const cyC={},CAk=Object.keys(CAS);K.cycles.forEach(c=>{if(c.ca)(cyC[c.ca]=cyC[c.ca]||[]).push(c)});
  h+=`<div class="card"><h3>Parcours par champ d'apprentissage</h3><div class="grid" style="max-height:none"><table><thead><tr class="r1"><th class="st0">Élève</th>${CAk.map(k=>`<th title="${esc(CAS[k])}" style="vertical-align:top">${k}<small style="display:block;white-space:normal;max-width:170px;font-weight:600;color:${cyC[k]?'var(--mut)':'var(--ko)'}">${cyC[k]?esc(cyC[k].map(c=>c.nom).join(', ')):'aucun cycle programmé'}</small></th>`).join('')}</tr></thead><tbody>`
   +L.map(e=>{const g=caAgg(e,R);return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td>`+CAk.map(k=>{const x=g[k];if(!x||!x.se)return'<td class="z">–</td>';const r=x.pr/x.se;
@@ -443,7 +468,9 @@ function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().pe
 
 /* ───── Fiche élève (synthèse) ───── */
 function fiche(id){const e=E.find(x=>x.id===id);if(!e)return;const a=agg(e);
- let h=`<h3>${esc(e.nom.toUpperCase())} ${esc(e.prenom)} · ${esc(e.classe)}</h3><div class="chips"><span>${a.se} séance(s)</span><span>Abs. ${a.A}</span><span>Ret. ${a.R}</span><span>👕 ${a.ten}</span><span>🩹 ${a.inf}</span><span>🩺 ${a.dis}</span><span>⚖️ +${a.pl} / −${a.mo} / ⚠${a.inc}</span>${Object.entries(caAgg(e)).filter(([,x])=>x.se).sort().map(([k,x])=>`<span title="${esc(CAS[k])}">${k} ${x.pr}/${x.se}</span>`).join('')}</div><div class="fi">`;
+ let h=`<h3>${esc(e.nom.toUpperCase())} ${esc(e.prenom)} · ${esc(e.classe)}</h3><div class="chips"><span>${a.se} séance(s)</span><span>Abs. ${a.A+a.VS}${a.VS?' (dont VS '+a.VS+')':''}</span><span>Ret. ${a.R}</span><span>👕 ${a.ten}</span><span>🩹 ${a.inf}</span><span>🩺 ${a.dis}</span><span>⚖️ +${a.pl} / −${a.mo} / ⚠${a.inc}</span>${Object.entries(caAgg(e)).filter(([,x])=>x.se).sort().map(([k,x])=>`<span title="${esc(CAS[k])}">${k} ${x.pr}/${x.se}</span>`).join('')}</div><div class="fi">`;
+ {const K=C(),PP=[...perOf(S.classe),{key:'an',nom:'Année',du:'',au:''}],rows=PP.map(p=>{const m=moy(notes(K,id,p.key==='an'?null:p)),ap=((K.cc||{})[p.key]||{})[id];return m!=null||ap?`<div class="se"><b>${esc(p.nom)}</b>${m!=null?` · moyenne <b>${f20(m)}/20</b>`:''}${ap?`<br>${esc(ap)}`:''}</div>`:''}).join('');
+  if(rows)h+=`<h4>Moyennes et appréciations</h4>`+rows}
  const P=C().disp.filter(d=>d.eleve===id);if(P.length)h+=`<h4>Périodes de dispense</h4>`+P.map(d=>`<div class="se">${esc(TYPES.dispense.lab[d.type])} du ${esc(frD(d.du))} ${d.au?'au '+esc(frD(d.au)):'(sans fin)'} ${esc(d.motif||'')}</div>`).join('');
  for(const c of C().cycles){const items=c.seances.map((s,i)=>{const l=s.cols.map(col=>[col,txt(c,s,col,id)]).filter(x=>x[1]&&!(x[0].type==='appel'&&x[1]==='Présent'));
    return l.length?`<div class="se"><b>S${i+1} · ${esc(frD(s.date))}</b> ${esc(s.titre||'')}<br>${l.map(([col,v])=>`${T(col).i} ${esc(col.nom)} : <b>${esc(v)}</b>`).join(' · ')}</div>`:''}).join('');
@@ -508,7 +535,7 @@ function colModal(s,col){const c=cy();let type=col?.type||'texte';
  const others=()=>allCols(c).filter(x=>NUMK.includes(T(x.col).k)&&(!col||x.col.id!==col.id));
  const opts=o=>{const t=TYPES[type];
   if(type==='equipe')return `<label>Équipes proposées (séparées par des virgules)<input name="liste" value="${esc(o.liste||'A,B,C,D')}"></label>`;
-  if(type==='distance'||type==='nombre')return `<label>Unité<input name="unite" value="${esc(o.unite??t.u)}" placeholder="m, pts, rép…"></label>${type==='nombre'?`<label>Sur (facultatif, ex : 20 pour une note)<input name="max" inputmode="decimal" value="${esc(o.max||'')}"></label>`:''}<label>Meilleure valeur<select name="best"><option value="max">la plus grande</option><option value="min" ${o.best==='min'?'selected':''}>la plus petite</option></select></label>`;
+  if(type==='distance'||type==='nombre')return `<label>Unité<input name="unite" value="${esc(o.unite??t.u)}" placeholder="m, pts, rép…"></label>${type==='nombre'?`<label>Sur (facultatif, ex : 20 pour une note)<input name="max" inputmode="decimal" value="${esc(o.max||'')}"></label><label>Coefficient dans la moyenne (si « Sur » est renseigné)<input name="coef" inputmode="decimal" value="${esc(o.coef??1)}"></label>`:''}<label>Meilleure valeur<select name="best"><option value="max">la plus grande</option><option value="min" ${o.best==='min'?'selected':''}>la plus petite</option></select></label>`;
   if(type==='temps')return `<p class="help">Saisie libre : 1:23.4 · 1'23"4 · 83,4 (secondes). Le plus petit temps est retenu comme meilleur.</p><label>Meilleure valeur<select name="best"><option value="min">le plus petit temps</option><option value="max" ${o.best==='max'?'selected':''}>le plus grand temps (gainage…)</option></select></label>`;
   if(type==='calcul'){const R=others();return `<label>Opération<select name="op">${Object.entries(OPS).map(([k,v])=>`<option value="${k}" ${o.op===k?'selected':''}>${v}</option>`).join('')}</select></label>
    <div id="rf"><label>Colonnes utilisées <span class="help">(dans l'ordre de sélection pour progression et vitesse)</span></label><div class="refs">${R.length?R.map(x=>`<label class="chk"><input type="checkbox" name="ref" value="${x.col.code}" ${(o.refs||[]).includes(x.col.code)?'checked':''}> <span class="code">${x.col.code}</span> S${x.si+1} · ${esc(frD(x.s.date))} · ${T(x.col).i} ${esc(x.col.nom)}</label>`).join(''):'<p class="help">Aucune colonne numérique dans ce cycle pour l\'instant.</p>'}</div></div>
@@ -517,6 +544,7 @@ function colModal(s,col){const c=cy();let type=col?.type||'texte';
    <label>Meilleure valeur<select name="best"><option value="max">la plus grande</option><option value="min" ${o.best==='min'?'selected':''}>la plus petite</option></select></label>`}
   if(type==='grille'){const GL=colGL;return `<label>Grille d'évaluation<select name="gsel">${GL.map((g,i)=>`<option value="${i}" ${g.id===CE_SEL?'selected':''}>${esc(g.lab||g.nom)}</option>`).join('')}</select></label><div id="gprev" class="help"></div>
    <p class="help">${ceGrids().some(g=>g.src==='CompEval')?'Grilles lues dans CompEval sur cet appareil.':'Aucune grille CompEval trouvée sur cet appareil : ouvrez SuiviProf et CompEval depuis Mes Apps EPS (même adresse), ou importez une grille exportée depuis CompEval (.json).'} La grille est copiée dans la colonne : modifier ou supprimer la grille dans CompEval ne change pas les évaluations déjà faites.</p>
+   <label>Coefficient dans la moyenne<input name="coef" inputmode="decimal" value="${esc(o.coef??1)}"></label>
    <label class="btn r s" style="display:inline-block">📂 Importer une grille (.json)<input type="file" accept=".json,application/json" hidden id="gimp"></label>`}
   if(type==='dispense')return `<p class="help">Les périodes de dispense saisies (bouton 🩺 Dispenses) s'affichent automatiquement en pointillés ; un appui force une autre valeur.</p>`;
   return ''};
@@ -542,7 +570,7 @@ function colModal(s,col){const c=cy();let type=col?.type||'texte';
   const order=[];m.querySelectorAll('[name=ref]').forEach(x=>{if(x.checked)order.push(x.value);x.onchange=()=>{const i=order.indexOf(x.value);if(x.checked&&i<0)order.push(x.value);if(!x.checked&&i>=0)order.splice(i,1)}});
   f.onsubmit=ev=>{ev.preventDefault();let gg=null;if(type==='grille'){gg=colGL[+(f.gsel&&f.gsel.value)];if(!gg){m.querySelector('#gprev').innerHTML='<b style="color:var(--ko)">Choisissez ou importez une grille.</b>';return}}
    const t=col||newCol(c,type);t.nom=f.nom.value.trim();if(gg&&gg.id!=='__cur'){t.o.g=gClean(gg);t.o.gid=gg.id}CE_SEL=null;t.cat=f.cat.value;const o=t.o;
-   ['liste','unite','max','best','op','f'].forEach(k=>{if(f[k])o[k]=f[k].value.trim()});if(f.dec)o.dec=+f.dec.value||0;
+   ['liste','unite','max','best','op','f'].forEach(k=>{if(f[k])o[k]=f[k].value.trim()});if(f.coef)o.coef=f.coef.value.trim()===''?1:gN(f.coef.value);if(f.dec)o.dec=+f.dec.value||0;
    if(type==='calcul'){const sel=[...m.querySelectorAll('[name=ref]:checked')].map(x=>x.value);o.refs=[...order.filter(x=>sel.includes(x)),...sel.filter(x=>!order.includes(x))]}
    if(!col){s.cols.push(t);s.fold=false}save();close();render()};
   if(col){const mv=d=>{const i=s.cols.indexOf(col),j=i+d;if(j<0||j>=s.cols.length)return;[s.cols[i],s.cols[j]]=[s.cols[j],s.cols[i]];save();render()};
@@ -574,6 +602,8 @@ function lignes(eid,classe){const K=S.classes[classe];if(!K)return[];const out=[
   if(!o.Dispense){const a=dispAuto(eid,s.date);if(a)o.Dispense=TYPES.dispense.lab[a]}
   if(mes.length)o.Mesures=mes.join(' · ');if(obs.length)o.Observations=obs.join(' · ');
   if(!o.CA)delete o.CA;if(Object.keys(o).length>(o.CA?4:3))out.push(o)}
+ for(const p of [...perOf(classe),{key:'an',nom:'Année',du:O().debut,au:O().fin}]){const m=moy(notes(K,eid,p.key==='an'?null:p)),ap=((K.cc||{})[p.key]||{})[eid];
+  if(m==null&&!ap)continue;const o={Date:p.au,Cycle:'Bilan de période','Séance':p.nom};if(m!=null)o.Moyenne=f20(m)+'/20';if(ap)o['Appréciation']=ap;out.push(o)}
  return out}
 /* ───── Sauvegarde du carnet : carnet SuiviProf + données CompEval (grilles et évaluations) dans un seul .json ───── */
 const BAK_LS='SuiviProfEPS_derniere_sauvegarde';
@@ -652,6 +682,7 @@ function renderOrg(){const o=O(),cls=allCls(),oc=orgCl(),v=$('#view');v.dataset.
  <div class="wks">${W.map(([m,w])=>w.school?`<button class="${w.L}${o.flip.includes(m)?' fl':''}" data-o="flip" data-m="${m}">${esc(frD(m).replace(/^\S+ /,''))}<b>${w.L}</b>${o.flip.includes(m)?'<br><small>↺ bascule</small>':''}</button>`:`<button class="vac" disabled>${esc(frD(m).replace(/^\S+ /,''))}<br><small>vacances</small></button>`).join('')}</div></div>`+hc+'</div>';
  v.innerHTML=h}
 $('#view').addEventListener('change',e=>{const t=e.target;if(t.id==='bper'){C().bper=t.value;save();return render()}
+ if(t.dataset.app!=null){const K=C(),cc=(K.cc=K.cc||{});(cc[t.dataset.pk]=cc[t.dataset.pk]||{})[t.dataset.app]=t.value.trim();save();return}
  const k=t.dataset.k;if(!k)return;const o=O(),oc=orgCl(),K=KL(oc),co=CO(oc),val=t.value;
  if(k==='zone'){o.zone=val;o.vac=vacDef(val);OM='Vacances remplacées par le calendrier de la zone '+val}
  else if(['debut','fin','ab'].includes(k))o[k]=val;else if(k==='als')o.als=t.checked;else if(k==='pent')o.pent=t.checked;

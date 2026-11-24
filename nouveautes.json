@@ -1,5 +1,17 @@
 [
  {
+  "v": "0.11.0",
+  "date": "2026-11-24",
+  "titre": "Moyennes, appréciations et appel « VS »",
+  "items": [
+   "Bilan : nouveau tableau « Moyennes et appréciations » pour le trimestre ou le semestre choisi (ou l'année) : moyenne de chaque cycle et moyenne de la période, calculées sur toutes les notes entre les dates de début et de fin de la période, même si elle couvre plusieurs cycles.",
+   "Notes prises en compte : grilles CompEval et colonnes « Nombre / note » ayant une valeur « Sur », ramenées sur 20, avec un coefficient réglable dans chaque colonne.",
+   "Saisie de l'appréciation du conseil de classe pour chaque élève et chaque période ; elle apparaît dans la fiche élève et remonte dans Mes Apps EPS avec la moyenne.",
+   "Appel : nouvelle option « VS » (absence saisie par la vie scolaire), comptée dans les absences et affichée à part dans le bilan.",
+   "Icônes des en-têtes de colonnes agrandies dans le carnet et le bilan ; boutons « ＋ » (ajouter une colonne) et « ⋯ » (options de la séance) plus grands et plus visibles."
+  ]
+ },
+ {
   "v": "0.10.0",
   "date": "2026-11-24",
   "titre": "Sauvegarde du carnet plus simple",

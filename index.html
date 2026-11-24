@@ -535,15 +535,29 @@ function seanceModal(s){const c=cy(),prev=c.seances.filter(x=>x.date<=today()&&x
   save();close();render();const g=$('.grid');if(g&&!s)g.scrollLeft=g.scrollWidth};
  s&&confirmBtn(m.querySelector('#del'),()=>{c.seances=c.seances.filter(x=>x!==s);save();close();render()})})}
 
+/* ───── Évaluation saisie dans une colonne « Grille CompEval » → recopiée dans CompEval (même adresse, même navigateur), à la date de la séance.
+   La grille est ajoutée à CompEval si elle n'y est pas. CompEval enregistre ensuite la ligne dans Mes Apps EPS (liste « pendEPS »). */
+function ceSend(col,date,eid,v){try{const g=col.o&&col.o.g;if(!g||!gOk(g)||!date)return;
+ const j=ceRead()||{grids:[],evals:{},cur:{},auto:false};j.grids=Array.isArray(j.grids)?j.grids:[];j.evals=j.evals||{};
+ if(!col.o.gid){col.o.gid='sp-'+uid();save()}const gid=col.o.gid;let G=j.grids.find(x=>x.id===gid);
+ if(!G){const N=g.niveaux.length;G=Object.assign(JSON.parse(JSON.stringify(g)),{id:gid});
+  G.items=G.items.map(it=>Object.assign({},it,{ind:Array.from({length:N},(_,k)=>(it.ind||[])[k]||''),p:Array.from({length:N},(_,k)=>(it.p||[])[k]??(G.niveaux[k]||{}).pts??0)}));
+  while(j.grids.some(x=>x.nom===G.nom))G.nom+=' (SuiviProf)';j.grids.push(G)}
+ const D=(j.evals[gid]=j.evals[gid]||{}),Dd=(D[date]=D[date]||{});
+ if(v)Dd[eid]={c:(v.c||[]).slice(0,G.items.length).map(x=>x==null?null:x),st:'',com:v.com||''};else delete Dd[eid];
+ if(!Object.keys(Dd).length)delete D[date];
+ const P=j.pendEPS=Array.isArray(j.pendEPS)?j.pendEPS:[];if(!P.some(p=>p.gid===gid&&p.date===date&&p.eid===eid))P.push({gid,date,eid});
+ localStorage.setItem(CE_KEY,JSON.stringify(j))}catch(e){}}
+
 function gridModal(col,eid){const c=cy(),g=col.o.g,L=pupils(),i=L.findIndex(x=>x.id===eid),e=L[i];if(!e||!g)return;
  const sea=c.seances.find(x=>x.cols.includes(col)),v=raw(c,col,eid)||{},sc=gScore(g,v);DIRTY=true;
- modal(`<h3>🧩 ${esc(e.nom.toUpperCase())} ${esc(e.prenom)}</h3><p class="help">${esc(col.nom)}${g.nom!==col.nom?' · '+esc(g.nom):''}${g.activite&&g.activite!==col.nom?' · '+esc(g.activite):''} · S${c.seances.indexOf(sea)+1} ${esc(frD(sea.date))} · élève ${i+1}/${L.length}</p>
+ modal(`<h3>🧩 ${esc(e.nom.toUpperCase())} ${esc(e.prenom)}</h3><p class="help">${esc(col.nom)}${g.nom!==col.nom?' · '+esc(g.nom):''}${g.activite&&g.activite!==col.nom?' · '+esc(g.activite):''} · S${c.seances.indexOf(sea)+1} ${esc(frD(sea.date))} · élève ${i+1}/${L.length} · <span title="Chaque saisie est aussi enregistrée dans CompEval (même navigateur), à la date de la séance">↔ CompEval</span></p>
  <div class="scroll"><table class="gt"><thead><tr><th>Compétence</th>${g.niveaux.map(n=>`<th style="background:${hexOk(n.couleur)};color:${txtOn(n.couleur)}">${esc(n.nom)}</th>`).join('')}</tr></thead><tbody>
  ${g.items.map((it,k)=>`<tr><th>${esc(it.nom)}</th>${g.niveaux.map((n,j)=>`<td><button type="button" class="gk${(v.c||[])[k]===j?' on':''}" data-gi="${k}" data-gj="${j}" style="--lc:${hexOk(n.couleur)};--lt:${txtOn(n.couleur)}">${esc((it.ind||[])[j]||'')||esc(n.nom)}</button></td>`).join('')}</tr>`).join('')}</tbody></table></div>
  <p class="gn">${sc.n?`Note : <b>${esc(fmt(col,sc.note))}</b> · ${sc.n}/${sc.tot} compétence(s) évaluée(s) · ${sc.pct} %`:'Aucune compétence évaluée : touchez la case du niveau atteint (un second appui l\'annule).'}</p>
  <label>Commentaire<input id="gcom" value="${esc(v.com||'')}" placeholder="facultatif"></label>
  <div class="bar"><button type="button" class="btn r" id="gp" ${i?'':'disabled'}>◀ Précédent</button><button type="button" class="btn r" id="gs" ${i<L.length-1?'':'disabled'}>Suivant ▶</button><span class="sp"></span><button class="btn" data-m="close">Terminer</button></div>`,m=>{
-  const put=x=>{const n=Object.assign({c:[]},raw(c,col,eid)||{},x);setVal(eid,col.id,gHas(n)?n:'')};
+  const put=x=>{const n=Object.assign({c:[]},raw(c,col,eid)||{},x);setVal(eid,col.id,gHas(n)?n:'');ceSend(col,sea.date,eid,gHas(n)?n:null)};
   m.querySelectorAll('.gk').forEach(bt=>bt.onclick=()=>{const k=+bt.dataset.gi,j=+bt.dataset.gj,cc=((raw(c,col,eid)||{}).c||[]).slice();cc[k]=cc[k]===j?null:j;put({c:cc});gridModal(col,eid)});
   m.querySelector('#gcom').onchange=ev=>put({com:ev.target.value.trim()});
   m.querySelector('#gp').onclick=()=>gridModal(col,L[i-1].id);m.querySelector('#gs').onclick=()=>gridModal(col,L[i+1].id)});

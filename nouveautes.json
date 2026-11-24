@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.13.0",
+  "date": "2026-11-24",
+  "titre": "Évaluations envoyées à CompEval",
+  "items": [
+   "Une évaluation saisie avec une colonne « Grille CompEval » est maintenant recopiée dans CompEval, à la date de la séance, à chaque enregistrement (repère « ↔ CompEval » dans la fenêtre d'évaluation).",
+   "Si la grille n'existe pas dans CompEval, elle y est ajoutée. CompEval enregistre ensuite ces évaluations dans Mes Apps EPS.",
+   "Effacer une évaluation ici l'efface aussi dans CompEval."
+  ]
+ },
+ {
   "v": "0.12.4",
   "date": "2026-11-24",
   "titre": "Évaluations reçues de CompEval",

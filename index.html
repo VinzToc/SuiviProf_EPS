@@ -101,7 +101,9 @@ td select.in{width:auto;text-align:left}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .chips span{background:rgba(255,255,255,.08);border-radius:20px;padding:3px 10px;font-size:.8rem;font-weight:700}
 .dl{width:100%;font-size:.85rem}.dl td{text-align:left;white-space:normal}
-.fut{opacity:.45}.ann{opacity:.4;text-decoration:line-through}th.today{box-shadow:inset 0 -3px 0 var(--ok)}
+td.fut,.fut>b,.fut>small,.fut .fold{opacity:.45}
+.btn.fd{display:block;margin:4px auto 2px;width:100%;min-height:36px;background:linear-gradient(135deg,#1976d2,#16b3a8 60%,#34c759);box-shadow:0 3px 10px #16b3a840;font-size:.82rem}
+th.cur{box-shadow:inset 0 -3px 0 var(--c1)}th.sh.cur b::after{content:' ● séance en cours';color:var(--c1);font-size:.7rem;font-weight:800}.ann{opacity:.4;text-decoration:line-through}th.today{box-shadow:inset 0 -3px 0 var(--ok)}
 .og{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:12px}.og .card{margin:0}
 .rw{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:5px 0}.rw input,.rw select{padding:6px 8px;font-size:15px}.rw input[type=text]{flex:1;min-width:120px}
 .rw label{margin:0}.rw label input,.rw label select{margin-top:2px}
@@ -111,6 +113,18 @@ td select.in{width:auto;text-align:left}
 .cyt{width:100%;font-size:.85rem;border-collapse:collapse}.cyt td{white-space:normal;text-align:left;vertical-align:top;background:transparent!important;padding:6px 4px}.cyt input[type=date]{padding:5px 6px;font-size:14px}
 .ok{color:var(--ok)}
 @media(max-width:600px){:root{--w0:128px;--w1:56px}.bil{--w0:150px}header{padding:10px}h1{font-size:1.1rem}.hide-s{display:none}.grid{max-height:calc(100vh - 235px)}}
+/* menu bas */
+main{padding-bottom:96px!important}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:center;gap:6px;padding:6px 10px calc(6px + env(safe-area-inset-bottom));background:rgba(4,20,36,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--bd);box-shadow:0 -6px 20px #0008}
+.bnav button{flex:1;max-width:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;border-radius:14px;padding:6px 4px;background:none;color:var(--mut);font:inherit;font-size:.74rem;font-weight:800;cursor:pointer;min-height:54px;line-height:1.1;text-align:center}
+.bnav button b{font-size:1.3rem;line-height:1}
+.bnav button.on{color:#fff;background:linear-gradient(135deg,rgba(25,118,210,.6),rgba(22,179,168,.55) 60%,rgba(52,199,89,.5))}
+.bnav button:not(.on):hover{color:var(--tx);background:rgba(255,255,255,.06)}
+.ocl{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.ocl button{border:1.5px solid var(--bd);border-radius:20px;padding:6px 14px;background:rgba(255,255,255,.05);color:var(--tx);font:inherit;font-weight:800;cursor:pointer;min-height:38px}
+.ocl button.on{border-color:transparent;background:linear-gradient(135deg,#1976d2,#16b3a8 60%,#34c759);color:#fff}
+.ovt tr[data-o]{cursor:pointer}.ovt tr[data-o]:hover td{background:rgba(255,255,255,.06)!important}.ovt tr.on td{background:rgba(46,211,160,.12)!important}
+.ovt td,.ovt th{white-space:normal;text-align:left;vertical-align:top}
 </style>
 
 
@@ -134,13 +148,17 @@ header .ttl p{margin:4px 0 0;font-size:.7rem;font-weight:600;letter-spacing:.1em
  <span class="msg" id="st"></span>
  <button class="btn b" id="bSync" hidden title="Enregistrer les saisies dans la base Mes Apps EPS">💾 <span class="hide-s">Mes Apps EPS</span></button>
  <button class="btn r" id="bXls" hidden title="Exporter la feuille SuiviProf de la classe (.xlsx)">⬇ <span class="hide-s">.xlsx</span></button>
- <button class="btn r" id="bOrg" hidden title="Organisation annuelle : calendrier, créneaux, cycles">📅 <span class="hide-s">Organisation annuelle</span></button>
- <button class="btn r" id="bSet" title="Réglages, liste élèves, sauvegarde">⚙️</button>
 </header>
 <main>
  <nav class="tabs" id="tabs" hidden></nav>
  <section id="view"></section>
 </main>
+<nav class="bnav" id="bnav" aria-label="Menu de l'application">
+ <button data-nav="carnet"><b>📒</b>Carnet</button>
+ <button data-nav="bilan"><b>📊</b>Bilan</button>
+ <button data-nav="org"><b>📅</b>Organisation annuelle</button>
+ <button data-nav="set"><b>⚙️</b>Réglages</button>
+</nav>
 <datalist id="apsaL"></datalist>
 <div class="ov" id="ov" hidden><div class="mo" id="mo"></div></div>
 <input type="file" id="fList" accept=".csv,.xlsx" hidden>
@@ -210,7 +228,9 @@ const vacDef=z=>[...CAL2627.commun,...(CAL2627[z]||[])].map(([nom,du,au])=>({nom
 function O(){if(!S.org)S.org={zone:'A',debut:'2026-09-01',fin:'2027-07-03',vac:vacDef('A'),als:false,ab:'A',flip:[],inter:[],
   per:{T:[{nom:'Trimestre 1',du:'2026-09-01',au:'2026-11-28'},{nom:'Trimestre 2',du:'2026-11-30',au:'2027-03-06'},{nom:'Trimestre 3',du:'2027-03-08',au:'2027-07-03'}],
        S:[{nom:'Semestre 1',du:'2026-09-01',au:'2027-01-23'},{nom:'Semestre 2',du:'2027-01-25',au:'2027-07-03'}]}};return S.org}
-const CO=cl=>{const K=cl?S.classes[cl]:C();return K.org||(K.org={cren:[],eval:'T'})};
+const KL=cl=>S.classes[cl]||(S.classes[cl]={cycles:[],disp:[],tab:null});
+const CO=cl=>{const K=cl?KL(cl):C();return K.org||(K.org={cren:[],eval:'T'})};
+const orgCl=()=>{const L=allCls();if(!L.includes(S.orgCl))S.orgCl=L.includes(S.classe)?S.classe:L[0];return S.orgCl};
 let FER=null,WK=null,OM='';
 function ferMap(){if(FER)return FER;const o=O();FER=new Map();for(let y=+o.debut.slice(0,4);y<=+o.fin.slice(0,4);y++)feries(y,o.als,o.pent).forEach(([d,n])=>FER.set(d,n));return FER}
 const isVac=d=>O().vac.some(x=>x.du<=d&&d<=x.au);
@@ -232,8 +252,8 @@ const sortS=c=>c.seances.sort((a,b)=>(a.date+(a.heure||'')).localeCompare(b.date
 function generate(cl,c){const{out}=slots(cl,c.du,c.au,c.cren),key=s=>s.date+'|'+(s.cren||''),have=new Set(c.seances.map(key)),want=new Set();let add=0,rm=0;
  for(const x of out){const k=x.date+'|'+x.c.id;want.add(k);if(!have.has(k)){c.seances.push({id:uid(),date:x.date,cren:x.c.id,heure:x.c.hd,titre:'',cols:MARK.map(t=>newCol(c,t)),gen:1});add++}}
  c.seances=c.seances.filter(s=>{if(!s.gen||want.has(key(s))||hasData(c,s))return true;rm++;return false});sortS(c);return{add,rm}}
-function repartir(n){const K=C(),co=CO();if(!co.cren.length){OM="⚠ Ajoutez d'abord les créneaux de la classe";return}
- const o=O(),dates=[...new Set(slots(S.classe,o.debut,o.fin,null).out.map(x=>x.date))];if(dates.length<n){OM='⚠ Pas assez de séances';return}
+function repartir(n,cl){const K=KL(cl),co=CO(cl);if(!co.cren.length){OM="⚠ Ajoutez d'abord les créneaux de la classe";return}
+ const o=O(),dates=[...new Set(slots(cl,o.debut,o.fin,null).out.map(x=>x.date))];if(dates.length<n){OM='⚠ Pas assez de séances';return}
  const per=dates.length/n,cy=[...K.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'));
  for(let i=0;i<n;i++){let c=cy[i];if(!c){c={id:uid(),nom:'Cycle '+(i+1),seq:0,seances:[],vals:{}};K.cycles.push(c)}
   c.du=dates[Math.round(i*per)];c.au=dates[Math.round((i+1)*per)-1];c.cren=co.cren.map(x=>x.id)}
@@ -243,7 +263,10 @@ async function vacNet(){const o=O(),y=+o.debut.slice(0,4),z=o.zone==='Corse'?'Co
  if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json(),m=new Map();
  for(const x of j.results||[]){if(/enseignant/i.test(x.population||''))continue;const du=iso(new Date(x.start_date)),au=addD(iso(new Date(x.end_date)),-1);if(du>o.fin||au<o.debut)continue;const k=x.description+du;if(!m.has(k))m.set(k,{nom:x.description,du,au})}
  const L=[...m.values()].sort((a,b)=>a.du.localeCompare(b.du));if(!L.length)throw new Error('aucune donnée pour cette zone');return L}
-const folded=(s,c=cy())=>s.fold!=null?s.fold:(!!s.annulee||s.date>today()||(s.date<today()&&!hasData(c,s)));
+let FOC=null,AUTO=true;
+/* Séance du jour, sinon dernière séance passée non annulée de la classe */
+function focusSeance(K){let best=null;for(const c of K.cycles)for(const s of c.seances){if(s.annulee||s.date>today())continue;const k=s.date+(s.heure||'');if(!best||k>best.k)best={k,c,s}}return best}
+const folded=(s,c=cy())=>s.fold!=null?s.fold:s.id!==FOC&&(!!s.annulee||s.date>today()||(s.date<today()&&!hasData(c,s)));
 const done=s=>!s.annulee&&s.date<=today();
 const crLab=c=>`${JOURS[c.jour]} ${c.hd}–${c.hf}${c.sem==='AB'?'':' · sem. '+c.sem}`;
 
@@ -276,16 +299,23 @@ function txt(c,s,col,eid){const t=T(col),v=raw(c,col,eid);
  if(NUMK.includes(t.k))return fmt(col,numv(c,col,eid));return v||''}
 
 /* ───── Rendu général ───── */
-function render(){const cl=[...new Set(E.map(e=>e.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
- const has=E.length>0;$('#cls').hidden=$('#tabs').hidden=$('#bSync').hidden=$('#bXls').hidden=$('#bOrg').hidden=!has;
+const allCls=()=>[...new Set(E.map(e=>e.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
+function fitGrid(){const g=document.querySelector('#view .grid.main');if(!g)return;const top=g.getBoundingClientRect().top+scrollY,nb=$('#bnav').offsetHeight;g.style.maxHeight=Math.max(280,innerHeight-top-nb-14)+'px'}
+addEventListener('resize',fitGrid);
+function render(){const cl=allCls(),has=E.length>0,V=S.view==='org'||S.view==='bilan'?S.view:'carnet';
+ document.querySelectorAll('#bnav [data-nav]').forEach(b=>b.classList.toggle('on',b.dataset.nav===V));
+ $('#cls').hidden=!has||V==='org';$('#bSync').hidden=$('#bXls').hidden=!has||V==='org';$('#tabs').hidden=!has||V!=='carnet';
+ if(V==='org')return renderOrg();
  if(!has){$('#view').innerHTML=`<div class="empty"><b>Aucune liste d'élèves sur cet appareil</b>Ouvrez SuiviProf EPS depuis le portail Mes Apps EPS (la liste Pronote y est partagée automatiquement),<br>ou chargez le fichier .xlsx / .csv exporté par Mes Apps EPS.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="list">📂 Charger la liste</button><button class="btn r" data-g="demo">🧪 Essayer avec une classe exemple</button></div></div>`;return}
  if(!cl.includes(S.classe))S.classe=cl[0];
  $('#cls').innerHTML=cl.map(c=>`<option ${c===S.classe?'selected':''}>${esc(c)}</option>`).join('');
- if(S.view==='org'){$('#tabs').hidden=true;$('#bOrg').className='btn b';return renderOrg()}$('#bOrg').className='btn r';
- const k=C();if(k.tab!=='bilan'&&!k.cycles.some(c=>c.id===k.tab))k.tab=k.cycles[0]?.id||'bilan';
+ if(V==='bilan')return renderBilan();
+ const k=C();if(AUTO){AUTO=false;const f=focusSeance(k);FOC=f?f.s.id:null;if(f)k.tab=f.c.id;$('#view').dataset.cy=''}
+ if(!k.cycles.some(c=>c.id===k.tab))k.tab=[...k.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'))[0]?.id||null;
  $('#tabs').innerHTML=[...k.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9')).map(c=>`<button class="tab ${c.id===k.tab?'on':''}" data-t="${c.id}" title="${esc(CAS[c.ca]||'')}">${esc(cyName(c))}</button>`).join('')
-  +`<button class="tab add" data-g="cycle">＋ Cycle</button><span class="sp"></span><button class="tab bil ${k.tab==='bilan'?'on':''}" data-t="bilan">📊 Bilan</button>`;
- k.tab==='bilan'?renderBilan():renderCycle()}
+  +`<button class="tab add" data-g="cycle">＋ Cycle</button>`;
+ if(!k.tab){$('#view').innerHTML=`<div class="empty"><b>Aucun cycle pour la classe ${esc(S.classe)}</b>Créez un cycle ici, ou programmez d'un coup tous les cycles de l'année (dates, créneaux, APSA) dans l'Organisation annuelle.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="cycle">＋ Cycle</button><button class="btn r" data-nav="org" data-oc="${esc(S.classe)}">📅 Organisation annuelle</button></div></div>`;return}
+ renderCycle()}
 
 function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
  const g=v.querySelector('.grid'),sc=g&&v.dataset.cy===c.id?[g.scrollLeft,g.scrollTop]:null;v.dataset.cy=c.id;
@@ -294,10 +324,10 @@ function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
   <button class="btn r s" data-g="disp">🩺 Dispenses (${C().disp.length})</button><button class="btn" data-g="seance">＋ Nouvelle séance</button></div>`;
  if(!nbS){v.innerHTML=h+`<div class="empty"><b>Ce cycle ne contient pas encore de séance</b>Créez une séance : l'application ouvre un groupe de colonnes daté (appel, tenue, dispense, infirmerie et comportement par défaut), auquel vous ajoutez les colonnes utiles. Avec des dates de cycle et des créneaux (📅 Organisation annuelle), toutes les séances sont générées automatiquement.<div class="bar" style="justify-content:center;margin-top:14px"><button class="btn r" data-g="ecycle">📅 Dates et créneaux du cycle</button><button class="btn" data-g="seance">＋ Nouvelle séance</button></div></div>`;return}
  const span=s=>folded(s)||!s.cols.length?1:s.cols.length;
- h+=`<div class="grid"><table><thead><tr class="r1"><th class="st0" rowspan="2">Élève</th><th class="st1" rowspan="2">Classe</th>`
-  +c.seances.map((s,i)=>`<th class="sh sg${s.date>today()?' fut':''}${s.annulee?' ann':''}${s.date===today()?' today':''}" data-sid="${s.id}" colspan="${span(s)}"><b>S${i+1} · ${esc(frD(s.date))}${s.heure?' · '+esc(s.heure.replace(':','h')):''}<span class="ac"><button class="btn s r" data-a="addcol" data-s="${s.id}" title="Ajouter une colonne">＋</button><button class="btn s r" data-a="fold" data-s="${s.id}" title="${folded(s)?'Déplier':'Replier'}">${folded(s)?'▸':'▾'}</button><button class="btn s r" data-a="smenu" data-s="${s.id}" title="Séance">⋯</button></span></b><small>${s.annulee?'Annulée '+esc(s.motif||''):esc(s.titre||'')}</small></th>`).join('')
+ h+=`<div class="grid main"><table><thead><tr class="r1"><th class="st0" rowspan="2">Élève</th><th class="st1" rowspan="2">Classe</th>`
+  +c.seances.map((s,i)=>`<th class="sh sg${s.date>today()?' fut':''}${s.annulee?' ann':''}${s.date===today()?' today':''}${s.id===FOC?' cur':''}" data-sid="${s.id}" colspan="${span(s)}"><b>S${i+1} · ${esc(frD(s.date))}${s.heure?' · '+esc(s.heure.replace(':','h')):''}<span class="ac"><button class="btn s r" data-a="addcol" data-s="${s.id}" title="Ajouter une colonne">＋</button>${folded(s)?'':`<button class="btn s r" data-a="fold" data-s="${s.id}" title="Replier la séance">▾ Replier</button>`}<button class="btn s r" data-a="smenu" data-s="${s.id}" title="Séance">⋯</button></span></b><small>${s.annulee?'Annulée '+esc(s.motif||''):esc(s.titre||'')}</small></th>`).join('')
   +`</tr><tr class="r2">`
-  +c.seances.map(s=>folded(s)||!s.cols.length?`<th class="sg${s.date>today()?' fut':''}">${folded(s)?`<span class="fold">${s.annulee?'annulée':s.date>today()?'à venir':hasData(c,s)?'repliée':'non saisie'}</span>`:`<button class="ch add" data-a="addcol" data-s="${s.id}">＋</button>`}</th>`
+  +c.seances.map(s=>folded(s)||!s.cols.length?`<th class="sg${s.date>today()?' fut':''}">${folded(s)?`<span class="fold">${s.annulee?'annulée':s.date>today()?'à venir':hasData(c,s)?'repliée':'non saisie'}</span><button class="btn s fd" data-a="fold" data-s="${s.id}" title="Afficher les colonnes de la séance">▸ Déplier</button>`:`<button class="ch add" data-a="addcol" data-s="${s.id}">＋</button>`}</th>`
    :s.cols.map((col,j)=>`<th class="${j?'':'sg'}${MARK.includes(col.type)?' mk':''}"><button class="ch" data-a="col" data-s="${s.id}" data-c="${col.id}" title="Modifier la colonne">${T(col).i} ${esc(col.nom)}<small><span class="code">${col.code}</span>${MARK.includes(col.type)?'':' '+esc(col.cat)}</small></button>${col.type==='appel'?`<br><button class="btn s b" data-a="allp" data-c="${col.id}">Tous P</button>`:''}</th>`).join('')).join('')
   +`</tr></thead><tbody>`
   +L.map(e=>`<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td><td class="st1">${esc(e.classe)}</td>`
@@ -305,8 +335,9 @@ function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
   +`</tbody><tfoot><tr id="tf">${foot(c,L)}</tr></tfoot></table></div>`;
  v.innerHTML=h;
  const n=v.querySelector('.grid');if(sc){n.scrollLeft=sc[0];n.scrollTop=sc[1]}
- else{const ths=[...n.querySelectorAll('th[data-sid]')],t=ths.filter(x=>(c.seances.find(y=>y.id===x.dataset.sid)||{}).date<=today()).pop();
-  if(t){const st=n.querySelector('thead .st1');n.scrollLeft=Math.max(0,t.offsetLeft-st.offsetLeft-st.offsetWidth-12)}}}
+ else{const ths=[...n.querySelectorAll('th[data-sid]')],t=n.querySelector(`th[data-sid="${FOC}"]`)||ths.filter(x=>(c.seances.find(y=>y.id===x.dataset.sid)||{}).date<=today()).pop();
+  if(t){const st=n.querySelector('thead .st1');n.scrollLeft=Math.max(0,t.offsetLeft-st.offsetLeft-st.offsetWidth-12)}}
+ fitGrid()}
 
 function txtShort(c,s,col,eid){const t=T(col),v=raw(c,col,eid);if(col.type==='dispense'){return v||dispAuto(eid,s.date)}
  if(t.k==='cycle')return v||'';if(t.k==='toggle')return v?t.i:'';if(t.k==='text')return v?'📝':'';return txt(c,s,col,eid)}
@@ -509,22 +540,25 @@ async function demo(){const N=[['ELEVE1','Prénom1','F'],['ELEVE2','Prénom2','F
  save();close();render()}
 
 /* ───── Page Organisation annuelle ───── */
-function renderOrg(){const o=O(),K=C(),co=CO(),v=$('#view');v.dataset.cy='';
- const cls=[...new Set(E.map(e=>e.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
+function renderOrg(){const o=O(),cls=allCls(),oc=orgCl(),v=$('#view');v.dataset.cy='';const K=oc?KL(oc):{cycles:[]},co=oc?CO(oc):{cren:[],eval:'T'};
  const fer=[...ferMap()].filter(([d])=>d>=o.debut&&d<=o.fin&&dow(d)%6).sort((a,b)=>a[0].localeCompare(b[0]));
  const W=[...weeks()],cycles=[...K.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'));
- let h=`<div class="bar"><h2>📅 Organisation annuelle</h2><span class="msg" id="om">${esc(OM)}</span><span class="sp"></span><button class="btn r" data-g="carnet">← Carnet</button></div><div class="og">`;OM='';
- h+=`<div class="card" style="grid-column:1/-1"><h3>Classe ${esc(S.classe)} · créneaux et cycles</h3><p class="help">Changez de classe avec la liste en haut de l'écran.</p>
+ let h=`<div class="bar"><h2>📅 Organisation annuelle</h2><span class="msg" id="om">${esc(OM)}</span></div><p class="help" style="margin-top:-4px">Réglages communs à toute l'année et à toutes les classes (calendrier, périodes, semaines A/B), puis, plus bas, créneaux et cycles de chaque classe.</p><div class="og">`;OM='';
+ const ovw=cls.map(cl=>{const k=KL(cl),c2=CO(cl),cy2=[...k.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'));
+   return `<tr data-o="ocl" data-c="${esc(cl)}" class="${cl===oc?'on':''}"><td><b>${esc(cl)}</b></td><td>${c2.cren.map(x=>esc(crLab(x))).join('<br>')||'<span class="help">aucun</span>'}</td><td>${c2.eval==='S'?'Semestres':'Trimestres'}</td>
+   <td>${cy2.map(c=>`${esc(cyName(c))}${c.du?` <span class="help">${esc(frD(c.du).replace(/^\S+ /,''))} → ${esc(frD(c.au).replace(/^\S+ /,''))}</span>`:''}`).join('<br>')||'<span class="help">aucun cycle</span>'}</td><td>${cy2.reduce((n,c)=>n+c.seances.length,0)}</td></tr>`}).join('');
+ let hc=`<div class="card" style="grid-column:1/-1"><h3>Vue d'ensemble des classes</h3>${cls.length?`<div class="grid" style="max-height:none"><table class="ovt dl"><thead><tr><th>Classe</th><th>Créneaux</th><th>Évaluation</th><th>Cycles</th><th>Séances</th></tr></thead><tbody>${ovw}</tbody></table></div><p class="help">Touchez une classe pour régler ses créneaux et ses cycles.</p>`:'<p class="help">Aucune liste d\'élèves chargée : les classes apparaîtront ici.</p>'}</div>`;
+ if(oc)hc+=`<div class="card" style="grid-column:1/-1"><h3>Créneaux et cycles de la classe</h3><div class="ocl">${cls.map(c=>`<button data-o="ocl" data-c="${esc(c)}" class="${c===oc?'on':''}">${esc(c)}</button>`).join('')}</div>
  <label>Créneaux d'EPS de la classe</label>${co.cren.map((c,i)=>`<div class="rw"><select data-k="cr" data-i="${i}" data-p="jour" aria-label="Jour">${[1,2,3,4,5,6].map(j=>`<option value="${j}" ${+c.jour===j?'selected':''}>${JOURS[j]}</option>`).join('')}</select><input type="time" data-k="cr" data-i="${i}" data-p="hd" value="${c.hd}" aria-label="Début"> → <input type="time" data-k="cr" data-i="${i}" data-p="hf" value="${c.hf}" aria-label="Fin"><select data-k="cr" data-i="${i}" data-p="sem" aria-label="Semaines"><option value="AB">toutes les semaines</option><option value="A" ${c.sem==='A'?'selected':''}>semaines A</option><option value="B" ${c.sem==='B'?'selected':''}>semaines B</option></select><button class="btn s k" data-o="cr-rm" data-i="${i}">✕</button></div>`).join('')||'<p class="help">Aucun créneau pour le moment.</p>'}
  <div class="rw"><button class="btn s r" data-o="cr-add">＋ Créneau</button></div>
  <label>Évaluation de la classe</label><div class="rw"><label class="chk"><input type="radio" name="ev" data-k="eval" value="T" ${co.eval!=='S'?'checked':''}> par trimestres</label><label class="chk" style="margin-left:14px"><input type="radio" name="ev" data-k="eval" value="S" ${co.eval==='S'?'checked':''}> par semestres</label></div>
  <label>Cycles (chacun a ses propres dates ; deux cycles peuvent se chevaucher sur des créneaux différents)</label>
- <table class="cyt"><tbody>${cycles.map(c=>{const r=slots(S.classe,c.du,c.au,c.cren);return `<tr><td style="min-width:190px"><div class="rw" style="margin:0;flex-wrap:nowrap"><input data-k="cy" data-id="${c.id}" data-p="nom" list="apsaL" value="${esc(c.nom)}" style="flex:1;min-width:0" aria-label="APSA">${caSel(c.ca||'',`data-k="cy" data-id="${c.id}" data-p="ca"`)}</div></td>
+ <table class="cyt"><tbody>${cycles.map(c=>{const r=slots(oc,c.du,c.au,c.cren);return `<tr><td style="min-width:190px"><div class="rw" style="margin:0;flex-wrap:nowrap"><input data-k="cy" data-id="${c.id}" data-p="nom" list="apsaL" value="${esc(c.nom)}" style="flex:1;min-width:0" aria-label="APSA">${caSel(c.ca||'',`data-k="cy" data-id="${c.id}" data-p="ca"`)}</div></td>
   <td><input type="date" data-k="cy" data-id="${c.id}" data-p="du" value="${c.du||''}" aria-label="Début"> → <input type="date" data-k="cy" data-id="${c.id}" data-p="au" value="${c.au||''}" aria-label="Fin"></td>
   <td>${co.cren.map(x=>`<label class="chk" style="margin:2px 0"><input type="checkbox" data-k="cyc-cr" data-id="${c.id}" value="${x.id}" ${(c.cren||[]).includes(x.id)?'checked':''}> ${esc(crLab(x))}</label>`).join('')||'<span class="help">aucun créneau</span>'}</td>
   <td>${c.du&&c.au&&c.cren?.length?`<b class="ok">${r.out.length} séance(s)</b>${r.skip.length?`<br><span class="help" title="${esc(r.skip.map(x=>frD(x.date)+' : '+x.r).join('\n'))}">${r.skip.length} retirée(s) ⓘ</span>`:''}`:'<span class="help">dates et créneaux à compléter</span>'}<br><span class="help">${c.seances.length} dans le carnet</span></td>
   <td><button class="btn s k" data-o="cy-rm" data-id="${c.id}">✕</button></td></tr>`}).join('')}</tbody></table>
- <div class="rw"><button class="btn s r" data-o="cy-add">＋ Cycle</button><span class="help">ou répartir l'année en</span><input type="number" id="nrep" min="1" max="12" value="${Math.max(3,cycles.length)}" style="width:70px" aria-label="Nombre de cycles"><button class="btn s r" data-o="rep">cycles de même durée</button><span class="sp"></span><button class="btn" data-o="gen">⚙️ Générer les séances de la classe</button></div></div>`;
+ <div class="rw"><button class="btn s r" data-o="cy-add">＋ Cycle</button><span class="help">ou répartir l'année en</span><input type="number" id="nrep" min="1" max="12" value="${Math.max(3,cycles.length)}" style="width:70px" aria-label="Nombre de cycles"><button class="btn s r" data-o="rep">cycles de même durée</button><span class="sp"></span><button class="btn" data-o="gen">⚙️ Générer les séances de ${esc(oc)}</button></div></div>`;
  h+=`<div class="card"><h3>Année scolaire et vacances</h3><div class="rw"><label style="flex:1">Rentrée<input type="date" data-k="debut" value="${o.debut}"></label><label style="flex:1">Fin des cours<input type="date" data-k="fin" value="${o.fin}"></label><label>Zone<select data-k="zone">${['A','B','C','Corse'].map(z=>`<option ${o.zone===z?'selected':''}>${z}</option>`).join('')}</select></label></div>
  <label class="chk"><input type="checkbox" data-k="als" ${o.als?'checked':''}> Alsace-Moselle (Vendredi saint et 26 décembre fériés)</label>
  <label class="chk"><input type="checkbox" data-k="pent" ${o.pent?'checked':''}> Lundi de Pentecôte travaillé (journée de solidarité)</label>
@@ -537,20 +571,21 @@ function renderOrg(){const o=O(),K=C(),co=CO(),v=$('#view');v.dataset.cy='';
  <label>Classes concernées (aucune cochée = toutes)</label><div class="rw">${cls.map(c=>`<label class="chk" style="margin:0 10px 0 0"><input type="checkbox" name="cl" value="${esc(c)}"> ${esc(c)}</label>`).join('')}</div><button class="btn s">＋ Ajouter la période</button></form>
  <h3 style="margin-top:16px">Périodes d'évaluation</h3>${['T','S'].map(t=>`<label>${t==='T'?'Trimestres':'Semestres'}</label>`+o.per[t].map((p,i)=>`<div class="rw"><span style="width:96px">${esc(p.nom)}</span><input type="date" data-k="per" data-pt="${t}" data-i="${i}" data-p="du" value="${p.du}" aria-label="Début"> → <input type="date" data-k="per" data-pt="${t}" data-i="${i}" data-p="au" value="${p.au}" aria-label="Fin"></div>`).join('')).join('')}</div>`;
  h+=`<div class="card" style="grid-column:1/-1"><h3>Semaines A / B</h3><div class="rw"><span class="help">Semaine de la rentrée :</span><select data-k="ab" aria-label="Semaine de la rentrée"><option ${o.ab==='A'?'selected':''}>A</option><option ${o.ab==='B'?'selected':''}>B</option></select><span class="help">L'alternance saute les semaines de vacances. Touchez une semaine pour inverser l'alternance à partir de celle-ci.</span></div>
- <div class="wks">${W.map(([m,w])=>w.school?`<button class="${w.L}${o.flip.includes(m)?' fl':''}" data-o="flip" data-m="${m}">${esc(frD(m).replace(/^\S+ /,''))}<b>${w.L}</b>${o.flip.includes(m)?'<br><small>↺ bascule</small>':''}</button>`:`<button class="vac" disabled>${esc(frD(m).replace(/^\S+ /,''))}<br><small>vacances</small></button>`).join('')}</div></div></div>`;
+ <div class="wks">${W.map(([m,w])=>w.school?`<button class="${w.L}${o.flip.includes(m)?' fl':''}" data-o="flip" data-m="${m}">${esc(frD(m).replace(/^\S+ /,''))}<b>${w.L}</b>${o.flip.includes(m)?'<br><small>↺ bascule</small>':''}</button>`:`<button class="vac" disabled>${esc(frD(m).replace(/^\S+ /,''))}<br><small>vacances</small></button>`).join('')}</div></div>`+hc+'</div>';
  v.innerHTML=h}
 $('#view').addEventListener('change',e=>{const t=e.target;if(t.id==='bper'){C().bper=t.value;save();return render()}
- const k=t.dataset.k;if(!k)return;const o=O(),co=CO(),val=t.value;
+ const k=t.dataset.k;if(!k)return;const o=O(),oc=orgCl(),K=KL(oc),co=CO(oc),val=t.value;
  if(k==='zone'){o.zone=val;o.vac=vacDef(val);OM='Vacances remplacées par le calendrier de la zone '+val}
  else if(['debut','fin','ab'].includes(k))o[k]=val;else if(k==='als')o.als=t.checked;else if(k==='pent')o.pent=t.checked;
  else if(k==='vac')o.vac[+t.dataset.i][t.dataset.p]=val;
  else if(k==='per')o.per[t.dataset.pt][+t.dataset.i][t.dataset.p]=val;
  else if(k==='cr')co.cren[+t.dataset.i][t.dataset.p]=t.dataset.p==='jour'?+val:val;
  else if(k==='eval')co.eval=val;
- else if(k==='cy'){const c=C().cycles.find(x=>x.id===t.dataset.id);c[t.dataset.p]=t.dataset.p==='nom'?val.trim()||c.nom:val;if(t.dataset.p==='nom'&&val in APSA)c.ca=caOf(val)}
- else if(k==='cyc-cr'){const c=C().cycles.find(x=>x.id===t.dataset.id);c.cren=(c.cren||[]).filter(x=>x!==val);if(t.checked)c.cren.push(val)}
+ else if(k==='cy'){const c=K.cycles.find(x=>x.id===t.dataset.id);c[t.dataset.p]=t.dataset.p==='nom'?val.trim()||c.nom:val;if(t.dataset.p==='nom'&&val in APSA)c.ca=caOf(val)}
+ else if(k==='cyc-cr'){const c=K.cycles.find(x=>x.id===t.dataset.id);c.cren=(c.cren||[]).filter(x=>x!==val);if(t.checked)c.cren.push(val)}
  save();render()});
-$('#view').addEventListener('click',async e=>{const b=e.target.closest('[data-o]');if(!b)return;const a=b.dataset.o,o=O(),co=CO(),K=C();
+$('#view').addEventListener('click',async e=>{const b=e.target.closest('[data-o]');if(!b)return;const a=b.dataset.o,o=O(),oc=orgCl(),K=KL(oc),co=CO(oc);
+ if(a==='ocl'){S.orgCl=b.dataset.c;save();render();const c=document.querySelector('.ocl');c&&c.scrollIntoView({block:'start',behavior:'smooth'});return}
  if(/-rm$/.test(a)&&!b.dataset.ok){b.dataset.ok=1;b.textContent='Supprimer ?';return}
  if(a==='cr-add'){const l=co.cren[co.cren.length-1];co.cren.push({id:uid(),jour:l?l.jour:1,hd:l?l.hd:'08:00',hf:l?l.hf:'10:00',sem:'AB'})}
  else if(a==='cr-rm'){const id=co.cren[+b.dataset.i].id;co.cren.splice(+b.dataset.i,1);K.cycles.forEach(c=>c.cren=(c.cren||[]).filter(x=>x!==id))}
@@ -562,14 +597,16 @@ $('#view').addEventListener('click',async e=>{const b=e.target.closest('[data-o]
  else if(a==='vac-net'){$('#om').textContent='Chargement…';try{o.vac=await vacNet();OM='✅ Vacances mises à jour depuis le calendrier officiel en ligne'}catch(x){$('#om').textContent='❌ Serveur injoignable ('+(x.message||x)+') : calendrier actuel conservé';return}}
  else if(a==='int-rm')o.inter.splice(+b.dataset.i,1);
  else if(a==='flip'){const m=b.dataset.m,i=o.flip.indexOf(m);if(i<0)o.flip.push(m);else o.flip.splice(i,1)}
- else if(a==='rep')repartir(Math.max(1,+$('#nrep').value||3));
- else if(a==='gen'){let ad=0,rm=0,n=0;FER=WK=null;for(const c of K.cycles)if(c.du&&c.au&&c.cren?.length){const r=generate(S.classe,c);ad+=r.add;rm+=r.rm;n++}
+ else if(a==='rep')repartir(Math.max(1,+$('#nrep').value||3),oc);
+ else if(a==='gen'){let ad=0,rm=0,n=0;FER=WK=null;for(const c of K.cycles)if(c.du&&c.au&&c.cren?.length){const r=generate(oc,c);ad+=r.add;rm+=r.rm;n++}
   OM=n?`✅ ${n} cycle(s) : ${ad} séance(s) ajoutée(s), ${rm} retirée(s). Les séances déjà saisies sont conservées.`:'⚠ Aucun cycle avec des dates et des créneaux'}
  save();render()});
 $('#view').addEventListener('submit',e=>{if(e.target.id!=='fint')return;e.preventDefault();const f=e.target;
  O().inter.push({id:uid(),nom:f.nom.value.trim(),du:f.du.value,au:f.au.value<f.du.value?f.du.value:f.au.value,classes:[...f.querySelectorAll('[name=cl]:checked')].map(x=>x.value)});OM='✅ Période ajoutée : pensez à régénérer les séances';save();render()});
 
 /* ───── Événements ───── */
+document.addEventListener('click',e=>{const n=e.target.closest('[data-nav]');if(!n)return;const v=n.dataset.nav;if(v==='set')return setModal();
+ if(n.dataset.oc)S.orgCl=n.dataset.oc;if(v==='carnet')AUTO=true;S.view=v==='carnet'?'':v;save();render();scrollTo(0,0)});
 document.addEventListener('click',async e=>{const g=e.target.closest('[data-g]'),t=e.target.closest('[data-t]');
  if(t){S.view='';C().tab=t.dataset.t;save();render();return}
  if(!g)return;const k=g.dataset.g;
@@ -596,13 +633,13 @@ $('#view').addEventListener('change',e=>{const b=e.target.closest('[data-a]');if
  refreshLive()});
 $('#view').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.target.tagName!=='INPUT')return;e.preventDefault();const td=e.target.closest('td'),tr=td.parentElement,i=[...tr.children].indexOf(td);
  const nx=(e.shiftKey?tr.previousElementSibling:tr.nextElementSibling)?.children[i]?.querySelector('input');e.target.blur();nx&&nx.focus()});
-$('#cls').onchange=e=>{S.classe=e.target.value;save();render()};
-$('#bOrg').onclick=()=>{S.view=S.view==='org'?'':'org';save();render()};$('#bSet').onclick=setModal;$('#bSync').onclick=()=>sync();$('#bXls').onclick=exportX;
+$('#cls').onchange=e=>{S.classe=e.target.value;AUTO=true;save();render()};
+$('#bSync').onclick=()=>sync();$('#bXls').onclick=exportX;
 $('#fList').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const r=await EPS.importFile(f);E=await EPS.all();$('#st').style.color='var(--ok)';$('#st').textContent=`✅ ${E.length} élève(s) chargé(s)`;close();render()}catch(x){$('#st').style.color='var(--ko)';$('#st').textContent='❌ '+x.message}};
 $('#fJson').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());if(!j.classes)throw new Error('fichier non reconnu');S=j;save();close();render()}catch(x){const m=$('#sm');if(m)m.textContent='❌ '+x.message}};
 
 $('#apsaL').innerHTML=Object.keys(APSA).map(a=>`<option value="${esc(a)}">`).join('');
-(async()=>{try{E=await EPS.all()}catch(x){E=[]}render()})();
+(async()=>{try{E=await EPS.all()}catch(x){E=[]}S.view='';render()})();
 if('serviceWorker'in navigator&&/github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>

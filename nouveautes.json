@@ -1,5 +1,18 @@
 [
  {
+  "v": "0.7.0",
+  "date": "2026-11-24",
+  "titre": "Mise à jour du 24 novembre 2026",
+  "items": [
+   "Nouveau menu en bas de l'écran : Carnet, Bilan, Organisation annuelle et Réglages.",
+   "L'Organisation annuelle devient une page à part entière, commune à toutes les classes : calendrier, vacances, périodes et semaines A/B, puis une vue d'ensemble de toutes les classes.",
+   "Créneaux et cycles se règlent classe par classe depuis cette page, sans changer la classe affichée dans le carnet.",
+   "Le Bilan s'ouvre depuis le menu (il n'est plus un onglet à côté des cycles).",
+   "Carnet : les séances repliées ont un bouton « Déplier » bien visible ; les séances ouvertes ont un bouton « Replier ».",
+   "Le carnet s'ouvre directement sur la séance du jour, ou à défaut sur la dernière séance de la classe (dépliée et signalée « séance en cours »), à l'ouverture de l'application, au changement de classe et depuis le menu Carnet."
+  ]
+ },
+ {
   "v": "0.6.5",
   "date": "2026-11-24",
   "titre": "Mise à jour du 24 novembre 2026",

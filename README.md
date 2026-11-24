@@ -1,4 +1,4 @@
-# SuiviProf EPS (prototype v0.8)
+# SuiviProf EPS (v0.9.0)
 Carnet de suivi des séances d'EPS intégré à Mes Apps EPS (identifiant d'application : `suiviprof`).
 - Une classe = un classeur ; un onglet par cycle + un onglet Bilan automatique.
 - Une séance = un groupe de colonnes daté. Par défaut : Appel, Tenue, Dispense, Infirmerie, Comportement (même largeur), puis les colonnes ajoutées (équipe, temps, distance, nombre/note, calcul, texte).
@@ -7,6 +7,7 @@ Carnet de suivi des séances d'EPS intégré à Mes Apps EPS (identifiant d'appl
 - Cycles nommés par APSA (liste reprise de Gestion AS Pronote) avec leur champ d'apprentissage (CA1 à CA5), proposé automatiquement et modifiable.
 - Bilan « Parcours par champ d'apprentissage » : séances pratiquées par élève et par CA, CA non programmés signalés.
 - Séances à venir repliées et grisées ; séance annulable avec motif ; bilan filtrable par période.
+- Colonne « 🧩 Grille CompEval » : grilles d'évaluation par compétences lues dans CompEval (clé `compeval_v1` du navigateur, même adresse vinztoc.github.io) ou importées (.json exporté par CompEval). La grille est copiée dans la colonne ; évaluation élève par élève, note calculée comme dans CompEval.
 - Enregistrement dans Mes Apps EPS en mode « lignes » (une ligne par élève et par séance : Date, Cycle, Séance, Appel, Tenue, Infirmerie, Dispense, Comportement, Équipe, Mesures, Observations).
 
 Dépôt : `VinzToc/SuiviProf_EPS`, publié sur https://vinztoc.github.io/SuiviProf_EPS/ (GitHub Pages).

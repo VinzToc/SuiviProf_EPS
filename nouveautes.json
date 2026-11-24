@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.9.0",
+  "date": "2026-11-24",
+  "titre": "Mise à jour du 24 novembre 2026",
+  "items": [
+   "Nouveau type de colonne « 🧩 Grille CompEval » : ajoutez à une séance une de vos grilles d'évaluation par compétences.",
+   "Les grilles enregistrées dans CompEval sont proposées directement (applications ouvertes depuis Mes Apps EPS) ; une grille exportée de CompEval (.json) peut aussi être importée.",
+   "Touchez la case d'un élève pour l'évaluer : grille complète avec les indicateurs, note calculée comme dans CompEval, commentaire, élève précédent / suivant.",
+   "La note s'affiche dans le carnet, compte dans le bilan (performances) et remonte dans Mes Apps EPS avec le niveau atteint pour chaque compétence."
+  ]
+ },
+ {
   "v": "0.8.0",
   "date": "2026-11-24",
   "titre": "Mise à jour du 24 novembre 2026",

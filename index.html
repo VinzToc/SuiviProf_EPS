@@ -103,6 +103,15 @@ td select.in{width:auto;text-align:left}
 .dl{width:100%;font-size:.85rem}.dl td{text-align:left;white-space:normal}
 td.fut,.fut>b,.fut>small,.fut .fold{opacity:.45}
 .fut.cur>b,.fut.cur>small{opacity:1}
+.gc{display:flex;align-items:center;gap:3px;min-height:36px;min-width:112px;border:1px solid var(--bd);border-radius:8px;background:rgba(255,255,255,.04);color:var(--tx);font:inherit;font-size:.82rem;cursor:pointer;padding:3px 8px}
+.gc i{width:9px;height:18px;border-radius:3px;border:1px solid rgba(255,255,255,.3);flex:none}.gc b{margin-left:5px;white-space:nowrap;color:var(--c3)}
+#mo:has(.gt){width:min(980px,100%)}
+.gt{border-collapse:separate;border-spacing:4px;width:100%;font-size:.8rem}
+.gt th{background:rgba(255,255,255,.07);padding:6px 8px;border-radius:8px;white-space:normal;text-align:left;font-size:.78rem;min-width:110px}
+.gt td{padding:0;background:none!important;border:0;white-space:normal;vertical-align:stretch}
+.gk{width:100%;height:100%;min-height:56px;min-width:110px;border:1.5px solid var(--lc);border-radius:9px;background:color-mix(in srgb,var(--lc) 14%,transparent);color:var(--tx);font:inherit;font-size:.76rem;cursor:pointer;padding:6px;text-align:left;line-height:1.25}
+.gk.on{background:var(--lc);color:var(--lt);font-weight:800;box-shadow:inset 0 0 0 2px #fff}
+.gn{font-size:.95rem;margin:10px 0 4px}
 .btn.fd{display:block;margin:4px auto 2px;width:100%;min-height:36px;background:linear-gradient(135deg,#1976d2,#16b3a8 60%,#34c759);box-shadow:0 3px 10px #16b3a840;font-size:.82rem}
 th.cur{box-shadow:inset 0 -3px 0 var(--c1)}th.sh.cur.fut{box-shadow:inset 0 -3px 0 var(--c2)}th.sh.cur.fut b::after{content:' ● prochaine séance';color:#6fb7ff}th.sh.cur b::after{content:' ● séance en cours';color:var(--c1);font-size:.7rem;font-weight:800}.ann{opacity:.4;text-decoration:line-through}th.today{box-shadow:inset 0 -3px 0 var(--ok)}
 .og{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:12px}.og .card{margin:0}
@@ -187,10 +196,11 @@ const TYPES={
  distance:{l:'Distance',i:'📏',cat:'Performance',k:'num',u:'m'},
  nombre:{l:'Nombre / note',i:'🔢',cat:'Performance',k:'num',u:''},
  calcul:{l:'Calcul',i:'🧮',cat:'Performance',k:'calc'},
- texte:{l:'Texte / observation',i:'📝',cat:'Observation',k:'text'}};
-const CATS=['Assiduité','Tenue','Infirmerie','Dispense','Comportement','Organisation','Performance','Observation'];
+ texte:{l:'Texte / observation',i:'📝',cat:'Observation',k:'text'},
+ grille:{l:'Grille CompEval',i:'🧩',cat:'Évaluation',k:'grid'}};
+const CATS=['Assiduité','Tenue','Infirmerie','Dispense','Comportement','Organisation','Performance','Évaluation','Observation'];
 const OPS={somme:'Somme',moyenne:'Moyenne',min:'Minimum',max:'Maximum',diff:'Progression (2ᵉ − 1ʳᵉ)',vitesse:'Vitesse km/h (distance m ÷ temps)',libre:'Formule libre'};
-const NUMK=['temps','num','calc'],MARK=['appel','tenue','dispense','infirmerie','comportement'];
+const NUMK=['temps','num','calc','grid'],MARK=['appel','tenue','dispense','infirmerie','comportement'];
 /* Champs d'apprentissage (programmes d'EPS ; CA5 au lycée) */
 const CAS={CA1:'Réaliser une performance motrice maximale mesurable à une échéance donnée',CA2:'Adapter ses déplacements à des environnements variés',CA3:'Réaliser une prestation corporelle destinée à être vue et appréciée',CA4:'Conduire et maîtriser un affrontement collectif ou interindividuel',CA5:'Réaliser et orienter son activité physique pour développer ses ressources et s\'entretenir'};
 /* Liste des APSA reprise de Gestion AS Pronote (app.js, ACTS), avec le CA proposé par défaut (modifiable pour chaque cycle) */
@@ -278,10 +288,32 @@ const parseNum=s=>{const n=parseFloat(String(s).replace(',','.'));return isFinit
 function parseT(s){s=String(s).trim();if(!s)return null;s=s.replace(/,/g,'.').replace(/[’']/g,':').replace(/["”″]/g,'.').replace(/m(in)?/i,':').replace(/s/i,'.').replace(/\.+$/,'');
  const p=s.split(':');if(p.some(x=>x!==''&&!/^\d*\.?\d*$/.test(x)))return null;const v=p.reduce((a,x)=>a*60+(parseFloat(x)||0),0);return isFinite(v)?v:null}
 const fmtT=v=>{const m=Math.floor(v/60),r=v-m*60;return m?`${m}:${r.toFixed(2).padStart(5,'0')}`:`${r.toFixed(2)} s`};
-function fmt(col,v){if(v==null||v==='')return'';if(col.type==='temps'||(col.type==='calcul'&&col.o.unite==='temps'))return fmtT(v);
+/* ───── Grilles CompEval : lues dans le navigateur (même adresse vinztoc.github.io) ou importées (.json exporté par CompEval) ───── */
+const CE_KEY='compeval_v1';let CE_IMP=[],CE_SEL=null;
+const gN=v=>{const n=parseFloat(String(v??'').replace(',','.'));return isFinite(n)?n:0};
+const hexOk=h=>/^#[0-9a-f]{6}$/i.test(h||'')?h:'#888888';
+const txtOn=h=>{h=hexOk(h);const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return(.299*r+.587*g+.114*b)/255>.62?'#111':'#fff'};
+const gMaxIt=(g,it)=>g.mode==='pct'?gN(it.pts):Math.max(0,...(it.p||[]).slice(0,g.niveaux.length).map(gN));
+const gPts=(g,it,j)=>g.mode==='pct'?gN(it.pts)*gN(g.niveaux[j].pct)/100:gN((it.p||[])[j]);
+function gScore(g,v){const c=(v&&v.c)||[],m=g.items.reduce((a,it)=>a+gMaxIt(g,it),0);let x=0,n=0;
+ g.items.forEach((it,i)=>{const j=c[i];if(j!=null&&j>=0&&j<g.niveaux.length){x+=gPts(g,it,j);n++}});
+ const sur=gN(g.sur)>0?gN(g.sur):m;let note=m?x/m*sur:0;const a=gN(g.arrondi);if(a>0)note=Math.round(note/a+1e-9)*a;
+ return{n,tot:g.items.length,note,sur,pct:m?Math.round(100*x/m):0}}
+const gClean=g=>{const o=JSON.parse(JSON.stringify({nom:g.nom||'Grille',activite:g.activite||'',mode:g.mode==='pts'?'pts':'pct',sur:g.sur??20,arrondi:g.arrondi??.5,niveaux:g.niveaux||[],items:g.items||[]}));return o};
+const gOk=g=>g&&Array.isArray(g.niveaux)&&g.niveaux.length&&Array.isArray(g.items)&&g.items.length;
+function ceGrids(){let L=[];try{const j=JSON.parse(localStorage.getItem(CE_KEY));if(j&&Array.isArray(j.grids))L=j.grids.filter(gOk).map(g=>Object.assign({src:'CompEval'},g))}catch(e){}
+ return[...L,...CE_IMP]}
+function gEx(){const N=[['Maîtrise insuffisante','#e8262b',0,0],['Maîtrise fragile','#ffa000',33,2],['Maîtrise satisfaisante','#76c442',67,3.5],['Très bonne maîtrise','#108a2c',100,5]];
+ const T=[['Gérer son allure',['Allure irrégulière, départ trop rapide','Allure tenue sur une partie de la course','Allure régulière, proche du projet','Allure régulière et ajustée aux sensations']],['Respecter son projet de course',['Projet non respecté','Écart important au projet','Écart faible au projet','Projet respecté']],['Utiliser des indicateurs (FC, ressenti)',['Aucun indicateur utilisé','Indicateurs relevés mais non exploités','Indicateurs utilisés pour réguler','Analyse et régulation autonomes']],["Rôle d'observateur / coach",['Relevés absents ou erronés','Relevés partiels','Relevés fiables','Relevés fiables et conseils pertinents']]];
+ return{id:'exemple-compeval',src:'exemple',nom:'Exemple CompEval · Course de demi-fond',activite:'Demi-fond',mode:'pct',sur:20,arrondi:.5,niveaux:N.map(([nom,couleur,pct,pts])=>({nom,couleur,pct,pts})),items:T.map(([nom,ind])=>({nom,pts:5,ind,p:N.map(x=>x[3])}))}}
+const gHas=v=>v&&((v.c||[]).some(x=>x!=null)||v.com);
+function gTxt(col,v){if(!gHas(v))return'';const g=col.o.g,sc=gScore(g,v);
+ const lv=g.items.map((it,i)=>{const j=(v.c||[])[i];return j!=null&&g.niveaux[j]?`${it.nom} : ${g.niveaux[j].nom}`:''}).filter(Boolean);
+ return[sc.n?`${fmt(col,sc.note)} (${sc.n}/${sc.tot} compétences)`:'',lv.join(' ; '),v.com||''].filter(Boolean).join(' — ')}
+function fmt(col,v){if(v==null||v==='')return'';if(col.type==='grille')return(Math.round(v*100)/100).toLocaleString('fr-FR')+'/'+gN(col.o.g?.sur||20);if(col.type==='temps'||(col.type==='calcul'&&col.o.unite==='temps'))return fmtT(v);
  const d=col.type==='calcul'?(col.o.dec??2):(col.o.dec??2),n=Math.round(v*10**d)/10**d;
  const u=col.type==='calcul'?col.o.unite:col.o.unite;return n.toLocaleString('fr-FR')+(u&&u!=='temps'?' '+u:'')+(col.o.max?' /'+col.o.max:'')}
-function numv(c,col,eid,d=0){if(col.type==='calcul')return calc(c,col,eid,d);const v=raw(c,col,eid);return typeof v==='number'?v:null}
+function numv(c,col,eid,d=0){if(col.type==='calcul')return calc(c,col,eid,d);if(col.type==='grille'){const v=raw(c,col,eid);return v&&(v.c||[]).some(x=>x!=null)?gScore(col.o.g,v).note:null}const v=raw(c,col,eid);return typeof v==='number'?v:null}
 function calc(c,col,eid,d=0){if(d>8)return null;const o=col.o,cols=allCols(c);
  const get=code=>{const r=cols.find(x=>x.col.code===code);return !r||r.col.id===col.id?null:numv(c,r.col,eid,d+1)};
  let v=null;
@@ -298,7 +330,7 @@ const bestDir=col=>col.o.best||(col.type==='temps'?'min':'max');
 /* Valeur lisible d'une cellule (bilan, fiche, export) */
 function txt(c,s,col,eid){const t=T(col),v=raw(c,col,eid);
  if(col.type==='dispense'){const x=v||dispAuto(eid,s.date);return x?t.lab[x]:''}
- if(t.k==='cycle')return v?t.lab[v]:'';if(t.k==='toggle')return v?t.lab:'';
+ if(t.k==='cycle')return v?t.lab[v]:'';if(t.k==='toggle')return v?t.lab:'';if(t.k==='grid')return gTxt(col,v);
  if(NUMK.includes(t.k))return fmt(col,numv(c,col,eid));return v||''}
 
 /* ───── Rendu général ───── */
@@ -343,7 +375,7 @@ function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
  fitGrid()}
 
 function txtShort(c,s,col,eid){const t=T(col),v=raw(c,col,eid);if(col.type==='dispense'){return v||dispAuto(eid,s.date)}
- if(t.k==='cycle')return v||'';if(t.k==='toggle')return v?t.i:'';if(t.k==='text')return v?'📝':'';return txt(c,s,col,eid)}
+ if(t.k==='cycle')return v||'';if(t.k==='toggle')return v?t.i:'';if(t.k==='text')return v?'📝':'';if(t.k==='grid'){const x=numv(c,col,eid);return x==null?(gHas(v)?'🧩':''):fmt(col,x)}return txt(c,s,col,eid)}
 
 function cell(c,s,col,e,j){const t=T(col),v=raw(c,col,e.id),b=(j?'':'sg')+(MARK.includes(col.type)?' mk':''),da=`data-c="${col.id}" data-e="${esc(e.id)}"`;
  if(t.k==='cycle'){let x=v||'',auto='';if(col.type==='dispense'&&!v){x=dispAuto(e.id,s.date);if(x)auto=' auto'}
@@ -351,6 +383,7 @@ function cell(c,s,col,e,j){const t=T(col),v=raw(c,col,e.id),b=(j?'':'sg')+(MARK.
  if(t.k==='toggle')return `<td class="${b}"><button class="ck ${v?'vX':''}" data-a="tog" ${da} title="${esc(t.l)}">${v?t.on:''}</button></td>`;
  if(t.k==='select'){const o=(col.o.liste||'').split(',').map(x=>x.trim()).filter(Boolean);
   return `<td class="${b}"><select class="in" data-a="sel" ${da}><option value=""></option>${o.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('')}</select></td>`}
+ if(t.k==='grid'){const g=col.o.g,sc=gHas(v)?gScore(g,v):null;return `<td class="${b}"><button class="gc" data-a="grid" ${da} title="Évaluer avec la grille « ${esc(g.nom)} »">${g.items.map((it,i)=>{const j=v&&(v.c||[])[i],lv=j!=null&&g.niveaux[j];return `<i style="${lv?'background:'+hexOk(lv.couleur)+';border-color:'+hexOk(lv.couleur):''}"></i>`}).join('')}<b>${sc&&sc.n?esc(fmt(col,sc.note)):'Évaluer'}</b>${v&&v.com?'💬':''}</button></td>`}
  if(t.k==='calc')return `<td class="${b} calc" data-calc="${col.id}" data-e="${esc(e.id)}">${esc(fmt(col,calc(c,col,e.id)))}</td>`;
  if(t.k==='text')return `<td class="${b}"><input class="in tx" data-a="in" ${da} value="${esc(v||'')}" title="${esc(v||'')}"></td>`;
  const shown=v==null?'':col.type==='temps'?fmtT(v):String(v).replace('.',',');
@@ -417,7 +450,7 @@ function fiche(id){const e=E.find(x=>x.id===id);if(!e)return;const a=agg(e);
 
 /* ───── Fenêtres ───── */
 function modal(h,bind){$('#mo').innerHTML=h;$('#ov').hidden=false;bind&&bind($('#mo'));const f=$('#mo').querySelector('input:not([type=checkbox]),select');f&&f.focus()}
-const close=()=>{$('#ov').hidden=true};
+let DIRTY=false;const close=()=>{$('#ov').hidden=true;if(DIRTY){DIRTY=false;render()}};
 $('#ov').onclick=e=>{if(e.target.id==='ov'||e.target.dataset.m==='close')close()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 function confirmBtn(btn,fn){btn.onclick=()=>{if(btn.dataset.ok){fn();return}btn.dataset.ok=1;btn.textContent='Confirmer la suppression ?'}}
@@ -453,6 +486,20 @@ function seanceModal(s){const c=cy(),prev=c.seances.filter(x=>x.date<=today()&&x
   save();close();render();const g=$('.grid');if(g&&!s)g.scrollLeft=g.scrollWidth};
  s&&confirmBtn(m.querySelector('#del'),()=>{c.seances=c.seances.filter(x=>x!==s);save();close();render()})})}
 
+function gridModal(col,eid){const c=cy(),g=col.o.g,L=pupils(),i=L.findIndex(x=>x.id===eid),e=L[i];if(!e||!g)return;
+ const sea=c.seances.find(x=>x.cols.includes(col)),v=raw(c,col,eid)||{},sc=gScore(g,v);DIRTY=true;
+ modal(`<h3>🧩 ${esc(e.nom.toUpperCase())} ${esc(e.prenom)}</h3><p class="help">${esc(col.nom)}${g.nom!==col.nom?' · '+esc(g.nom):''}${g.activite&&g.activite!==col.nom?' · '+esc(g.activite):''} · S${c.seances.indexOf(sea)+1} ${esc(frD(sea.date))} · élève ${i+1}/${L.length}</p>
+ <div class="scroll"><table class="gt"><thead><tr><th>Compétence</th>${g.niveaux.map(n=>`<th style="background:${hexOk(n.couleur)};color:${txtOn(n.couleur)}">${esc(n.nom)}</th>`).join('')}</tr></thead><tbody>
+ ${g.items.map((it,k)=>`<tr><th>${esc(it.nom)}</th>${g.niveaux.map((n,j)=>`<td><button type="button" class="gk${(v.c||[])[k]===j?' on':''}" data-gi="${k}" data-gj="${j}" style="--lc:${hexOk(n.couleur)};--lt:${txtOn(n.couleur)}">${esc((it.ind||[])[j]||'')||esc(n.nom)}</button></td>`).join('')}</tr>`).join('')}</tbody></table></div>
+ <p class="gn">${sc.n?`Note : <b>${esc(fmt(col,sc.note))}</b> · ${sc.n}/${sc.tot} compétence(s) évaluée(s) · ${sc.pct} %`:'Aucune compétence évaluée : touchez la case du niveau atteint (un second appui l\'annule).'}</p>
+ <label>Commentaire<input id="gcom" value="${esc(v.com||'')}" placeholder="facultatif"></label>
+ <div class="bar"><button type="button" class="btn r" id="gp" ${i?'':'disabled'}>◀ Précédent</button><button type="button" class="btn r" id="gs" ${i<L.length-1?'':'disabled'}>Suivant ▶</button><span class="sp"></span><button class="btn" data-m="close">Terminer</button></div>`,m=>{
+  const put=x=>{const n=Object.assign({c:[]},raw(c,col,eid)||{},x);setVal(eid,col.id,gHas(n)?n:'')};
+  m.querySelectorAll('.gk').forEach(bt=>bt.onclick=()=>{const k=+bt.dataset.gi,j=+bt.dataset.gj,cc=((raw(c,col,eid)||{}).c||[]).slice();cc[k]=cc[k]===j?null:j;put({c:cc});gridModal(col,eid)});
+  m.querySelector('#gcom').onchange=ev=>put({com:ev.target.value.trim()});
+  m.querySelector('#gp').onclick=()=>gridModal(col,L[i-1].id);m.querySelector('#gs').onclick=()=>gridModal(col,L[i+1].id)});
+ document.activeElement&&document.activeElement.blur()}
+
 function newCol(c,type,nom){const t=TYPES[type];return{id:uid(),code:'c'+(++c.seq),type,nom:nom||t.n||t.l,cat:t.cat,o:type==='distance'?{unite:'m'}:type==='equipe'?{liste:'A,B,C,D'}:type==='calcul'?{op:'somme',refs:[],dec:2,unite:''}:{}}}
 
 function colModal(s,col){const c=cy();let type=col?.type||'texte';
@@ -466,9 +513,16 @@ function colModal(s,col){const c=cy();let type=col?.type||'texte';
    <div id="fl"><label>Formule<input name="f" value="${esc(o.f||'')}" placeholder="ex : c6/100  ou  (c3+c4)/2"></label><p class="help">Utilisez les codes des colonnes du cycle (${R.map(x=>x.col.code).join(', ')||'aucune'}) et + − * / ( ) min max round abs sqrt pow. Décimales avec un point.</p></div>
    <label>Unité du résultat<input name="unite" value="${esc(o.unite||'')}" placeholder="km/h, pts… ou « temps » pour afficher en m:ss"></label><label>Décimales<input name="dec" type="number" min="0" max="4" value="${o.dec??2}"></label>
    <label>Meilleure valeur<select name="best"><option value="max">la plus grande</option><option value="min" ${o.best==='min'?'selected':''}>la plus petite</option></select></label>`}
+  if(type==='grille'){const GL=colGL;return `<label>Grille d'évaluation<select name="gsel">${GL.map((g,i)=>`<option value="${i}" ${g.id===CE_SEL?'selected':''}>${esc(g.lab||g.nom)}</option>`).join('')}</select></label><div id="gprev" class="help"></div>
+   <p class="help">${ceGrids().some(g=>g.src==='CompEval')?'Grilles lues dans CompEval sur cet appareil.':'Aucune grille CompEval trouvée sur cet appareil : ouvrez SuiviProf et CompEval depuis Mes Apps EPS (même adresse), ou importez une grille exportée depuis CompEval (.json).'} La grille est copiée dans la colonne : modifier ou supprimer la grille dans CompEval ne change pas les évaluations déjà faites.</p>
+   <label class="btn r s" style="display:inline-block">📂 Importer une grille (.json)<input type="file" accept=".json,application/json" hidden id="gimp"></label>`}
   if(type==='dispense')return `<p class="help">Les périodes de dispense saisies (bouton 🩺 Dispenses) s'affichent automatiquement en pointillés ; un appui force une autre valeur.</p>`;
   return ''};
+ let colGL=[];
  const draw=()=>{const o=col&&col.type===type?col.o:newCol({seq:0},type).o;
+  if(type==='grille'){const src=ceGrids();colGL=[...(col&&col.type==='grille'&&col.o.g?[Object.assign({},col.o.g,{id:'__cur',lab:'Grille actuelle de la colonne : '+col.o.g.nom})]:[]),
+   ...src.map(g=>Object.assign({},g,{lab:(g.src==='CompEval'?'CompEval · ':'Importée · ')+g.nom+(g.activite?' ('+g.activite+')':'')+(col&&g.id===col.o.gid?' — version à jour':'')})),...(src.length?[]:[gEx()])];
+   if(CE_SEL==null)CE_SEL=colGL[0]?.id}
   modal(`<h3>${col?'Modifier la colonne':'Ajouter une colonne'} <span class="help">${esc(frD(s.date))}</span></h3>
   ${col?`<p class="help">Type : ${T(col).i} ${T(col).l} · code <span class="code">${col.code}</span></p>`:`<div class="tg">${Object.entries(TYPES).map(([k,t])=>`<button type="button" data-ty="${k}" class="${k===type?'on':''}">${t.i} ${t.l}</button>`).join('')}</div>`}
   <form id="f"><label>Nom de la colonne<input name="nom" required value="${esc(col?.type===type?col.nom:TYPES[type].l)}"></label>
@@ -476,11 +530,16 @@ function colModal(s,col){const c=cy();let type=col?.type||'texte';
   ${opts(o)}
   <div class="bar"><button class="btn">${col?'Enregistrer':'Ajouter'}</button><button type="button" class="btn r" data-m="close">Annuler</button><span class="sp"></span>
   ${col?'<button type="button" class="btn r s" id="mvl">◀</button><button type="button" class="btn r s" id="mvr">▶</button><button type="button" class="btn k" id="del">Supprimer</button>':''}</div></form>`,m=>{
-  m.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{type=b.dataset.ty;draw()});
+  m.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{type=b.dataset.ty;CE_SEL=null;draw()});
+  if(type==='grille'){const fm=m.querySelector('#f'),prev=()=>{const g=colGL[+fm.gsel.value];m.querySelector('#gprev').textContent=g?`${g.items.length} compétence(s) · ${g.niveaux.length} niveau(x) : ${g.niveaux.map(n=>n.nom).join(', ')} · note sur ${gN(g.sur)||'total des points'}`:''};
+   if(fm.gsel){fm.gsel.onchange=()=>{const g=colGL[+fm.gsel.value];CE_SEL=g&&g.id;if(g&&!col)fm.nom.value=g.nom;prev()};if(!col&&colGL[+fm.gsel.value])fm.nom.value=colGL[+fm.gsel.value].nom;prev()}
+   const im=m.querySelector('#gimp');im&&(im.onchange=async ev=>{const fl=ev.target.files[0];if(!fl)return;try{const o=JSON.parse(await fl.text());const arr=(Array.isArray(o)?o:[o.grille||o]).filter(gOk).map(g=>Object.assign({},g,{id:'imp-'+uid(),src:'import'}));
+    if(!arr.length)throw new Error('ce fichier ne contient pas de grille CompEval');CE_IMP.push(...arr);CE_SEL=arr[0].id;draw()}catch(x){m.querySelector('#gprev').innerHTML='<b style="color:var(--ko)">❌ '+esc(x.message)+'</b>'}})}
   const f=m.querySelector('#f'),tog=()=>{if(f.op){m.querySelector('#fl').hidden=f.op.value!=='libre';m.querySelector('#rf').hidden=f.op.value==='libre'}};
   if(f.op){f.op.onchange=tog;tog()}
   const order=[];m.querySelectorAll('[name=ref]').forEach(x=>{if(x.checked)order.push(x.value);x.onchange=()=>{const i=order.indexOf(x.value);if(x.checked&&i<0)order.push(x.value);if(!x.checked&&i>=0)order.splice(i,1)}});
-  f.onsubmit=ev=>{ev.preventDefault();const t=col||newCol(c,type);t.nom=f.nom.value.trim();t.cat=f.cat.value;const o=t.o;
+  f.onsubmit=ev=>{ev.preventDefault();let gg=null;if(type==='grille'){gg=colGL[+(f.gsel&&f.gsel.value)];if(!gg){m.querySelector('#gprev').innerHTML='<b style="color:var(--ko)">Choisissez ou importez une grille.</b>';return}}
+   const t=col||newCol(c,type);t.nom=f.nom.value.trim();if(gg&&gg.id!=='__cur'){t.o.g=gClean(gg);t.o.gid=gg.id}CE_SEL=null;t.cat=f.cat.value;const o=t.o;
    ['liste','unite','max','best','op','f'].forEach(k=>{if(f[k])o[k]=f[k].value.trim()});if(f.dec)o.dec=+f.dec.value||0;
    if(type==='calcul'){const sel=[...m.querySelectorAll('[name=ref]:checked')].map(x=>x.value);o.refs=[...order.filter(x=>sel.includes(x)),...sel.filter(x=>!order.includes(x))]}
    if(!col){s.cols.push(t);s.fold=false}save();close();render()};
@@ -663,6 +722,7 @@ document.addEventListener('click',async e=>{const g=e.target.closest('[data-g]')
 $('#view').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,c=cy();
  const s=c&&c.seances.find(x=>x.id===b.dataset.s),col=c&&allCols(c).find(x=>x.col.id===b.dataset.c)?.col;
  if(a==='fiche')return fiche(b.dataset.e);
+ if(a==='grid')return gridModal(col,b.dataset.e);
  if(a==='addcol')return colModal(s);if(a==='col')return colModal(s,col);if(a==='smenu')return seanceModal(s);
  if(a==='fold'){s.fold=!folded(s);save();return render()}
  if(a==='allp'){pupils().forEach(p=>{if(!raw(c,col,p.id))setVal(p.id,col.id,'P')});return render()}

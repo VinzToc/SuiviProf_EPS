@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.12.2",
+  "date": "2026-11-24",
+  "titre": "Classes rattachées à des groupes",
+  "items": [
+   "Une classe dont tous les élèves sont suivis dans des groupes d'enseignement n'apparaît plus seule : ni dans la liste du carnet, ni dans l'Organisation annuelle, ni dans le choix des classes des périodes interruptives. Tout se fait dans le groupe.",
+   "Une classe dont une partie des élèves n'est dans aucun groupe reste proposée normalement.",
+   "Une classe dont le carnet contient déjà des saisies reste affichée, pour ne rien masquer."
+  ]
+ },
+ {
   "v": "0.12.1",
   "date": "2026-11-24",
   "titre": "Groupes d'enseignement",

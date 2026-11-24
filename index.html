@@ -349,7 +349,14 @@ function txt(c,s,col,eid){const t=T(col),v=raw(c,col,eid);
 /* ───── Rendu général ───── */
 const cmpCl=(a,b)=>a.localeCompare(b,'fr',{numeric:true});
 const grpCls=()=>[...new Set(E.flatMap(grpOf))].sort(cmpCl);
-const allCls=()=>[...new Set([...E.map(e=>e.classe).filter(Boolean),...E.flatMap(grpOf)])].sort(cmpCl);
+/* Classe « dépendante » d'un groupe : tous ses élèves sont suivis dans au moins un groupe d'enseignement.
+   Elle n'a pas de carnet propre (ni dans le Carnet, ni dans l'Organisation annuelle, ni pour les périodes interruptives) :
+   tout se fait dans le groupe. Exception : une classe dont le carnet contient déjà des saisies reste affichée. */
+const carnetRempli=cl=>{const K=S.classes[cl];return!!K&&(K.cycles||[]).some(c=>c.seances.some(s=>hasData(c,s)))};
+function depCls(){const G=new Set(E.flatMap(grpOf)),by=new Map();
+ E.forEach(e=>{if(!e.classe)return;const x=by.get(e.classe)||{n:0,g:0};x.n++;if(grpOf(e).length)x.g++;by.set(e.classe,x)});
+ return new Set([...by].filter(([c,x])=>x.g===x.n&&!G.has(c)&&!carnetRempli(c)).map(([c])=>c))}
+const allCls=()=>{const D=depCls();return[...new Set([...E.map(e=>e.classe).filter(c=>c&&!D.has(c)),...E.flatMap(grpOf)])].sort(cmpCl)};
 function fitGrid(){const g=document.querySelector('#view .grid.main');if(!g)return;const top=g.getBoundingClientRect().top+scrollY,nb=$('#bnav').offsetHeight;g.style.maxHeight=Math.max(280,innerHeight-top-nb-14)+'px'}
 addEventListener('resize',fitGrid);
 function render(){const cl=allCls(),has=E.length>0,V=S.view==='org'||S.view==='bilan'?S.view:'carnet';

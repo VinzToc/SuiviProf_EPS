@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.12.0",
+  "date": "2026-11-24",
+  "titre": "Import direct des listes Pronote",
+  "items": [
+   "Nouveau bouton « 📂 Importer une liste Pronote (.csv) » sur l'écran d'accueil et dans les Réglages : SuiviProf s'utilise sans passer par le portail Mes Apps EPS.",
+   "Plusieurs fichiers peuvent être importés à la fois (un export Pronote par classe) ; un nouvel import met les élèves à jour sans créer de doublons.",
+   "Les listes importées sont aussi disponibles dans les autres applications de Mes Apps EPS ouvertes sur le même appareil."
+  ]
+ },
+ {
   "v": "0.11.0",
   "date": "2026-11-24",
   "titre": "Moyennes, appréciations et appel « VS »",

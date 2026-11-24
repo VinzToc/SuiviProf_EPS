@@ -179,7 +179,7 @@ header .ttl p{margin:4px 0 0;font-size:.7rem;font-weight:600;letter-spacing:.1em
 </nav>
 <datalist id="apsaL"></datalist>
 <div class="ov" id="ov" hidden><div class="mo" id="mo"></div></div>
-<input type="file" id="fList" accept=".csv,.xlsx" hidden>
+<input type="file" id="fList" accept=".csv,text/csv,.xlsx" multiple hidden>
 <input type="file" id="fJson" accept=".json" hidden>
 <input type="file" id="fProg" accept=".json,application/json" hidden>
 <script src="eps-core.js"></script>
@@ -349,7 +349,7 @@ function render(){const cl=allCls(),has=E.length>0,V=S.view==='org'||S.view==='b
  document.querySelectorAll('#bnav [data-nav]').forEach(b=>b.classList.toggle('on',b.dataset.nav===V));
  $('#cls').hidden=!has||V==='org';$('#bSync').hidden=$('#bXls').hidden=!has||V==='org';$('#tabs').hidden=!has||V!=='carnet';
  if(V==='org')return renderOrg();
- if(!has){$('#view').innerHTML=`<div class="empty"><b>Aucune liste d'élèves sur cet appareil</b>Ouvrez SuiviProf EPS depuis le portail Mes Apps EPS (la liste Pronote y est partagée automatiquement),<br>ou chargez le fichier .xlsx / .csv exporté par Mes Apps EPS.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="list">📂 Charger la liste</button><button class="btn r" data-g="demo">🧪 Essayer avec une classe exemple</button></div></div>`;return}
+ if(!has){$('#view').innerHTML=`<div class="empty"><b>Aucune liste d'élèves sur cet appareil</b>Importez directement l'export Pronote de vos classes (.csv, plusieurs fichiers possibles),<br>ou ouvrez SuiviProf EPS depuis le portail Mes Apps EPS : la liste y est partagée automatiquement.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="list">📂 Importer une liste Pronote (.csv)</button><button class="btn r" data-g="demo">🧪 Essayer avec une classe exemple</button></div></div>`;return}
  if(!cl.includes(S.classe))S.classe=cl[0];
  $('#cls').innerHTML=cl.map(c=>`<option ${c===S.classe?'selected':''}>${esc(c)}</option>`).join('');
  if(V==='bilan')return renderBilan();
@@ -589,7 +589,7 @@ function dispModal(){const K=C(),L=pupils(),nm=id=>{const e=E.find(x=>x.id===id)
  m.querySelector('#f').onsubmit=ev=>{ev.preventDefault();const d=Object.fromEntries(new FormData(ev.target));K.disp.push(d);save();render();dispModal()}})}
 
 function setModal(){modal(`<h3>⚙️ Réglages</h3>
- <div class="card"><h3>Liste des élèves</h3><p class="help">${E.length} élève(s) dans la base locale. Depuis le portail Mes Apps EPS, la liste est déjà partagée ; sinon chargez le .xlsx ou le .csv exporté par le portail.</p><div class="bar"><button class="btn b" data-g="list">📂 Charger la liste</button><button class="btn r" data-g="demo">🧪 Classe exemple</button></div></div>
+ <div class="card"><h3>Liste des élèves</h3><p class="help">${E.length} élève(s) dans la base locale. Importez l'export Pronote de vos classes (.csv, plusieurs fichiers à la fois si besoin) ou un fichier .xlsx de Mes Apps EPS ; un nouvel import met les élèves à jour sans créer de doublons. Depuis le portail Mes Apps EPS, la liste est déjà partagée.</p><div class="bar"><button class="btn b" data-g="list">📂 Importer une liste Pronote (.csv)</button><button class="btn r" data-g="demo">🧪 Classe exemple</button></div></div>
  <div class="card"><h3>Sauvegarde du carnet</h3><p class="help">Le carnet (structure des cycles, séances, colonnes et saisies) est conservé sur cet appareil. La sauvegarde .json (également accessible par le bouton « 📒 » en haut de page) contient le carnet <b>et les grilles / évaluations CompEval</b> : elle permet de le transférer sur un autre appareil.</p><div class="bar"><button class="btn r" data-g="json">⬇ Sauvegarder (.json)</button><button class="btn r" data-g="rjson">⬆ Restaurer</button></div><p class="msg" id="sm"></p></div>
  <div class="bar"><span class="sp"></span><button class="btn r" data-m="close">Fermer</button></div>`)}
 
@@ -802,7 +802,11 @@ $('#view').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.target.tagName!=
  const nx=(e.shiftKey?tr.previousElementSibling:tr.nextElementSibling)?.children[i]?.querySelector('input');e.target.blur();nx&&nx.focus()});
 $('#cls').onchange=e=>{S.classe=e.target.value;AUTO=true;save();render()};
 $('#bBak').onclick=()=>sauvegarderCarnet();$('#bSync').onclick=()=>sync();$('#bXls').onclick=exportX;
-$('#fList').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const r=await EPS.importFile(f);E=await EPS.all();$('#st').style.color='var(--ok)';$('#st').textContent=`✅ ${E.length} élève(s) chargé(s)`;close();render()}catch(x){$('#st').style.color='var(--ko)';$('#st').textContent='❌ '+x.message}};
+/* Import direct d'une ou plusieurs listes Pronote (.csv) ou Mes Apps EPS (.xlsx) : utilisable sans le portail */
+$('#fList').onchange=async e=>{const fs=[...e.target.files];e.target.value='';if(!fs.length)return;let add=0,upd=0;const err=[];
+ for(const f of fs){try{const r=await EPS.importFile(f);add+=r.add??0;upd+=r.upd??0}catch(x){err.push(f.name+' : '+x.message)}}
+ E=await EPS.all();AUTO=true;const n=new Set(E.map(x=>x.classe)).size;$('#st').style.color=err.length?'var(--ko)':'var(--ok)';
+ $('#st').textContent=`${err.length?'⚠':'✅'} ${fs.length} fichier(s) : ${add} élève(s) ajouté(s), ${upd} mis à jour · ${n} classe(s)`+(err.length?' · '+err.join(' ; '):'');close();render()};
 $('#fJson').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());const msg=restaurerCarnet(j);close();render();$('#st').style.color='var(--ok)';$('#st').textContent='✅ Carnet restauré.'+msg}catch(x){const m=$('#sm')||$('#st');if(m)m.textContent='❌ '+x.message}};
 
 $('#apsaL').innerHTML=Object.keys(APSA).map(a=>`<option value="${esc(a)}">`).join('');

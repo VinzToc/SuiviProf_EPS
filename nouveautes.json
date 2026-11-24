@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.12.3",
+  "date": "2026-11-24",
+  "titre": "Noms des élèves lisibles",
+  "items": [
+   "Carnet et bilan : le nom de l'élève s'affiche sur deux lignes, NOM puis prénom, pour que les prénoms ne soient plus masqués par les noms longs.",
+   "Toutes les lignes gardent la même hauteur, quelle que soit la longueur du nom."
+  ]
+ },
+ {
   "v": "0.12.2",
   "date": "2026-11-24",
   "titre": "Classes rattachées à des groupes",

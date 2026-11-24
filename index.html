@@ -13,13 +13,13 @@
    PICTURE: la grille elle-même, en tête d'écran
    COLOUR / TYPE : charte Mes Apps EPS (nuit bleue, orange / bleu), system-ui
    LAYOUT : barre de classe, onglets de cycles, grille à colonnes figées (élève, classe) */
-:root{--bg:#071b2f;--tx:#eef3ff;--mut:rgba(238,243,255,.62);--glass:rgba(255,255,255,.07);--bd:rgba(255,255,255,.15);--c1:#2ed3a0;--c2:#2f9bff;--c3:#9cf2c9;--ok:#6ff0a0;--ko:#ff8f8f;--cell:#0c2236;--cell2:#0f2a42;--head:#0a1e31;--w0:170px;--w1:76px}
+:root{--bg:#071b2f;--tx:#eef3ff;--mut:rgba(238,243,255,.62);--glass:rgba(255,255,255,.07);--bd:rgba(255,255,255,.15);--c1:#2ed3a0;--c2:#2f9bff;--c3:#9cf2c9;--ok:#6ff0a0;--ko:#ff8f8f;--cell:#0c2236;--cell2:#0f2a42;--head:#0a1e31;--w0:190px;--w1:76px}
 *{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
 body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);min-height:100vh;overflow-x:clip}
 body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 8% 4%,rgba(46,211,160,.16),transparent 55%),radial-gradient(ellipse at 94% 96%,rgba(47,155,255,.2),transparent 55%)}
 header{display:flex;align-items:center;gap:12px;padding:12px 14px 6px;flex-wrap:wrap}
 h1{margin:0;font-size:1.35rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;background:linear-gradient(90deg,#4fb3ff,#2ed3a0 55%,#5fe07a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
-.sp{flex:1}.bil{--w0:250px}.bil .st0{white-space:normal;text-overflow:clip}.bil .st0 .nm{white-space:normal;overflow:visible;line-height:1.25}.lg{width:42px;height:42px;border-radius:11px;flex:none}
+.sp{flex:1}.bil{--w0:230px}.lg{width:42px;height:42px;border-radius:11px;flex:none}
 main{padding:0 14px 40px}
 .btn{border:0;border-radius:12px;padding:9px 14px;font:inherit;font-weight:800;font-size:.86rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,#16a9b0,#2fbf5c);box-shadow:0 4px 14px #16a9b040;min-height:40px;white-space:nowrap}
 .btn.b{background:linear-gradient(135deg,#2f9bff,#0a4fd0);box-shadow:0 4px 14px #0a4fd045}
@@ -68,6 +68,9 @@ tfoot .st0,tfoot .st1{z-index:5}
 .ch.add{color:var(--c3);font-size:1.1rem;padding:6px 10px}
 .nm{font:inherit;color:var(--tx);background:none;border:0;cursor:pointer;text-align:left;padding:6px 2px;width:100%;overflow:hidden;text-overflow:ellipsis}
 .nm b{font-weight:800}
+/* Élève sur deux lignes : NOM puis prénom, même hauteur pour toutes les lignes ; chaque ligne est coupée par « … » seulement si elle dépasse la colonne */
+.nm{display:block;white-space:nowrap;line-height:1.22;padding:4px 2px;min-height:40px}.nm b{display:block;overflow:hidden;text-overflow:ellipsis}.nm span.pn{display:block;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:var(--mut)}
+td.st0>b{display:block;overflow:hidden;text-overflow:ellipsis}td.st0>span.pn{display:block;overflow:hidden;text-overflow:ellipsis;color:var(--mut);font-size:.92em}
 .ck{width:100%;min-width:44px;min-height:36px;border:0;border-radius:8px;background:rgba(255,255,255,.04);color:var(--tx);font:inherit;font-weight:900;font-size:.95rem;cursor:pointer}
 .ck.auto{font-style:italic;opacity:.75;outline:1px dashed #6fb7ff}
 .vVS{background:#3f5f8f;color:#e6efff;font-size:.82rem}.vP,.v\+{background:#1d6b3f;color:#d9ffe7}.vA,.vI{background:#8f1d1d;color:#ffe0e0}.vR,.v−{background:#d4a514;color:#1d1a05}
@@ -388,7 +391,7 @@ function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
   +c.seances.map(s=>folded(s)||!s.cols.length?`<th class="sg${s.date>today()?' fut':''}">${folded(s)?`<span class="fold">${s.annulee?'annulée':s.date>today()?'à venir':hasData(c,s)?'repliée':'non saisie'}</span><button class="btn s fd" data-a="fold" data-s="${s.id}" title="Afficher les colonnes de la séance">▸ Déplier</button>`:`<button class="ch add" data-a="addcol" data-s="${s.id}">＋</button>`}</th>`
    :s.cols.map((col,j)=>`<th class="${j?'':'sg'}${MARK.includes(col.type)?' mk':''}"><button class="ch" data-a="col" data-s="${s.id}" data-c="${col.id}" title="Modifier la colonne"><span class="ci">${T(col).i}</span>${esc(col.nom)}<small><span class="code">${col.code}</span>${MARK.includes(col.type)?'':' '+esc(col.cat)}</small></button>${col.type==='appel'?`<br><button class="btn s b" data-a="allp" data-c="${col.id}">Tous P</button>`:''}</th>`).join('')).join('')
   +`</tr></thead><tbody>`
-  +L.map(e=>`<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td><td class="st1">${esc(e.classe)}</td>`
+  +L.map(e=>`<tr><td class="st0"><button class="nm" title="${esc(e.nom.toUpperCase()+' '+e.prenom)}" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b><span class="pn">${esc(e.prenom)}</span></button></td><td class="st1">${esc(e.classe)}</td>`
    +c.seances.map(s=>folded(s)||!s.cols.length?`<td class="sg fold${s.date>today()?' fut':''}">${esc(s.cols.map(col=>txtShort(c,s,col,e.id)).filter(Boolean).join(' · '))}</td>`:s.cols.map((col,j)=>cell(c,s,col,e,j)).join('')).join('')+'</tr>').join('')
   +`</tbody><tfoot><tr id="tf">${foot(c,L)}</tr></tfoot></table></div>`;
  v.innerHTML=h;
@@ -453,7 +456,7 @@ function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().pe
  let h=`<div class="bar"><h2>Bilan · ${esc(S.classe)}</h2><select id="bper" aria-label="Période"><option value="an">Année</option>${PS.map((p,i)=>`<option value="${i}" ${String(K.bper)===String(i)?'selected':''}>${esc(p.nom)}</option>`).join('')}</select><span class="mut">${R?'du '+esc(frD(R.du))+' au '+esc(frD(R.au))+' · ':''}${A[0]?.[1].se??0} séance(s) faite(s) · cliquez sur un élève pour sa synthèse</span></div>`;
  h+=`<div class="grid" style="max-height:none"><table class="bt"><thead><tr class="r1"><th class="st0">Élève</th><th class="st1">Classe</th>${H.map(x=>`<th><span class="ci">${x[2]}</span>${x[1]}</th>`).join('')}<th><span class="ci">📈</span>Assiduité</th></tr></thead><tbody>`
   +A.map(([e,a])=>{const ab=a.A+a.VS,pr=a.P+a.R+ab?Math.round(100*(a.P+a.R)/(a.P+a.R+ab)):null;
-   return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td><td class="st1">${esc(e.classe)}</td>`
+   return `<tr><td class="st0"><button class="nm" title="${esc(e.nom.toUpperCase()+' '+e.prenom)}" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b><span class="pn">${esc(e.prenom)}</span></button></td><td class="st1">${esc(e.classe)}</td>`
    +H.map(([k])=>{const n=a[k];return k==='se'||k==='P'?`<td>${n}</td>`:n?`<td class="h" style="background:rgba(${warm[k]},${(.15+.5*n/mx(k)).toFixed(2)})">${n}</td>`:'<td class="z">–</td>'}).join('')
    +`<td>${pr==null?'–':pr+' %'}</td></tr>`}).join('')
   +`</tbody><tfoot><tr><td class="st0">Total</td><td class="st1"></td>${H.map(([k])=>`<td>${k==='se'?(A[0]?.[1].se??0):A.reduce((s,x)=>s+x[1][k],0)}</td>`).join('')}<td></td></tr></tfoot></table></div>`;
@@ -462,20 +465,20 @@ function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().pe
  const cm=f=>{const ms=NT.map(([,l])=>moy(f(l))).filter(x=>x!=null);return ms.length?f20(ms.reduce((a,b)=>a+b,0)/ms.length):'–'};
  h+=`<div class="card"><h3>Moyennes et appréciations · ${esc(pl)}</h3><p class="help">${R?`Notes du ${esc(frD(R.du))} au ${esc(frD(R.au))} (dates de l'Organisation annuelle), tous cycles confondus${prov?' · période en cours : moyennes provisoires':''}`:"Toutes les notes de l'année"}. Notes prises en compte : grilles CompEval et colonnes « Nombre / note » ayant une valeur « Sur », ramenées sur 20 et pondérées par leur coefficient. La moyenne de la période cumule toutes ces notes.</p>
  <div class="grid" style="max-height:none"><table class="mt"><thead><tr class="r1"><th class="st0">Élève</th>${cyN.map(c=>`<th title="${esc(CAS[c.ca]||'')}">${esc(cyName(c))}<br><small>moyenne /20</small></th>`).join('')}<th>Moyenne ${esc(pl)}<br><small>/20</small></th><th>Appréciation du conseil de classe · ${esc(pl)}</th></tr></thead><tbody>`
-  +NT.map(([e,l])=>{const g=moy(l);return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td>`
+  +NT.map(([e,l])=>{const g=moy(l);return `<tr><td class="st0"><button class="nm" title="${esc(e.nom.toUpperCase()+' '+e.prenom)}" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b><span class="pn">${esc(e.prenom)}</span></button></td>`
    +cyN.map(c=>{const lc=l.filter(x=>x.c===c),m=moy(lc);return m==null?'<td class="z">–</td>':`<td title="${esc(lc.map(x=>x.col.nom+' ('+frD(x.s.date)+') : '+f20(x.n20)+'/20'+(x.coef!==1?' × '+x.coef:'')).join('\n'))}">${f20(m)} <small class="help">(${lc.length} note${lc.length>1?'s':''})</small></td>`}).join('')
    +`<td class="h">${g==null?'<span class="help">–</span>':`<b>${f20(g)}</b>`}</td><td><textarea class="app" data-app="${esc(e.id)}" data-pk="${pk}" rows="2" placeholder="Appréciation…">${esc(CC[e.id]||'')}</textarea></td></tr>`}).join('')
   +`</tbody><tfoot><tr><td class="st0">Moyenne de la classe</td>${cyN.map(c=>`<td>${cm(l=>l.filter(x=>x.c===c))}</td>`).join('')}<td>${cm(l=>l)}</td><td></td></tr></tfoot></table></div>${cyN.length?'':'<p class="help">Aucune note sur cette période.</p>'}</div>`;
  const cyC={},CAk=Object.keys(CAS);K.cycles.forEach(c=>{if(c.ca)(cyC[c.ca]=cyC[c.ca]||[]).push(c)});
  h+=`<div class="card"><h3>Parcours par champ d'apprentissage</h3><div class="grid" style="max-height:none"><table><thead><tr class="r1"><th class="st0">Élève</th>${CAk.map(k=>`<th title="${esc(CAS[k])}" style="vertical-align:top">${k}<small style="display:block;white-space:normal;max-width:170px;font-weight:600;color:${cyC[k]?'var(--mut)':'var(--ko)'}">${cyC[k]?esc(cyC[k].map(c=>c.nom).join(', ')):'aucun cycle programmé'}</small></th>`).join('')}</tr></thead><tbody>`
-  +L.map(e=>{const g=caAgg(e,R);return `<tr><td class="st0"><button class="nm" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</button></td>`+CAk.map(k=>{const x=g[k];if(!x||!x.se)return'<td class="z">–</td>';const r=x.pr/x.se;
+  +L.map(e=>{const g=caAgg(e,R);return `<tr><td class="st0"><button class="nm" title="${esc(e.nom.toUpperCase()+' '+e.prenom)}" data-a="fiche" data-e="${esc(e.id)}"><b>${esc(e.nom.toUpperCase())}</b><span class="pn">${esc(e.prenom)}</span></button></td>`+CAk.map(k=>{const x=g[k];if(!x||!x.se)return'<td class="z">–</td>';const r=x.pr/x.se;
    return `<td class="h" style="background:rgba(${r>=.75?'90,220,140':r>=.5?'240,195,40':'255,90,90'},.32)" title="${x.pr} séance(s) pratiquée(s) sur ${x.se}${x.ab?' · '+x.ab+' absence(s)':''}${x.dis?' · '+x.dis+' dispensée(s)':''}">${x.pr}/${x.se}${x.dis?` <small>🩺${x.dis}</small>`:''}</td>`}).join('')+'</tr>'}).join('')
   +`</tbody></table></div><p class="help">Séances pratiquées (présent ou en retard, sans dispense) sur séances saisies dans les cycles de chaque CA. Vert : au moins 75 % · orange : au moins 50 % · rouge : moins de 50 %. Le CA5 ne concerne que le lycée.</p></div>`;
  /* performances : colonnes numériques regroupées par nom dans chaque cycle */
  for(const c of K.cycles){const G=new Map();allCols(c).forEach(x=>{if(NUMK.includes(T(x.col).k)&&(!R||x.s.date>=R.du&&x.s.date<=R.au)){const k=x.col.nom.trim().toLowerCase();if(!G.has(k))G.set(k,[]);G.get(k).push(x)}});
   if(!G.size)continue;
   h+=`<div class="card"><h3>Performances · ${esc(cyName(c))}</h3><div class="grid" style="max-height:none"><table><thead><tr class="r1"><th class="st0">Élève</th>${[...G.values()].map(g=>`<th>${T(g[0].col).i} ${esc(g[0].col.nom)}<br><small style="color:var(--mut)">meilleure · ${g.length} relevé(s)</small></th>`).join('')}</tr></thead><tbody>`
-   +L.map(e=>`<tr><td class="st0"><b>${esc(e.nom.toUpperCase())}</b> ${esc(e.prenom)}</td>`+[...G.values()].map(g=>{const vs=g.map(x=>[x,numv(c,x.col,e.id)]).filter(y=>y[1]!=null);if(!vs.length)return'<td class="z">–</td>';
+   +L.map(e=>`<tr><td class="st0"><b>${esc(e.nom.toUpperCase())}</b><span class="pn">${esc(e.prenom)}</span></td>`+[...G.values()].map(g=>{const vs=g.map(x=>[x,numv(c,x.col,e.id)]).filter(y=>y[1]!=null);if(!vs.length)return'<td class="z">–</td>';
     const col=g[0].col,dir=bestDir(col),best=vs.reduce((a,b)=>(dir==='min'?b[1]<a[1]:b[1]>a[1])?b:a),f=vs[0][1],l=vs[vs.length-1][1];
     const pg=vs.length>1?((dir==='min'?l<f:l>f)?`<span class="up">▲ ${fmt(col,Math.abs(l-f))}</span>`:l===f?'':`<span class="dn">▼ ${fmt(col,Math.abs(l-f))}</span>`):'';
     return `<td title="${esc(vs.map(y=>'S'+(y[0].si+1)+' : '+fmt(y[0].col,y[1])).join(' | '))}"><b>${esc(fmt(col,best[1]))}</b> ${pg}</td>`}).join('')+'</tr>').join('')+'</tbody></table></div></div>'}

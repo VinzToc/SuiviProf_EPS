@@ -224,7 +224,12 @@ let syncT;
 function save(){FER=WK=null;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}clearTimeout(syncT);syncT=setTimeout(()=>sync(true),2500)}
 const C=()=>S.classes[S.classe]||(S.classes[S.classe]={cycles:[],disp:[],tab:null});
 const cy=()=>C().cycles.find(c=>c.id===C().tab);
-const pupils=()=>E.filter(e=>e.classe===S.classe).sort((a,b)=>(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr',{numeric:true}));
+/* Groupes d'enseignement (eps-core v2.5) : l'élève garde sa classe et peut appartenir à un ou plusieurs groupes (champ « groupes »).
+   Dans SuiviProf, un groupe est un carnet comme une classe : il réunit ses élèves venus de plusieurs classes. */
+const grpOf=e=>(Array.isArray(e.groupes)?e.groupes:String(e.groupes??'').split('|')).map(x=>String(x).trim()).filter(Boolean);
+const inCl=(e,cl)=>e.classe===cl||grpOf(e).includes(cl);
+const carnetsOf=e=>[...new Set([e.classe,...grpOf(e)].filter(Boolean))];
+const pupils=()=>E.filter(e=>inCl(e,S.classe)).sort((a,b)=>(a.nom+' '+a.prenom).localeCompare(b.nom+' '+b.prenom,'fr',{numeric:true}));
 const allCols=c=>c.seances.flatMap((s,si)=>s.cols.map(col=>({col,s,si})));
 const T=col=>TYPES[col.type];
 const raw=(c,col,eid)=>((c.vals||{})[eid]||{})[col.id];
@@ -342,7 +347,9 @@ function txt(c,s,col,eid){const t=T(col),v=raw(c,col,eid);
  if(NUMK.includes(t.k))return fmt(col,numv(c,col,eid));return v||''}
 
 /* ───── Rendu général ───── */
-const allCls=()=>[...new Set(E.map(e=>e.classe).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
+const cmpCl=(a,b)=>a.localeCompare(b,'fr',{numeric:true});
+const grpCls=()=>[...new Set(E.flatMap(grpOf))].sort(cmpCl);
+const allCls=()=>[...new Set([...E.map(e=>e.classe).filter(Boolean),...E.flatMap(grpOf)])].sort(cmpCl);
 function fitGrid(){const g=document.querySelector('#view .grid.main');if(!g)return;const top=g.getBoundingClientRect().top+scrollY,nb=$('#bnav').offsetHeight;g.style.maxHeight=Math.max(280,innerHeight-top-nb-14)+'px'}
 addEventListener('resize',fitGrid);
 function render(){const cl=allCls(),has=E.length>0,V=S.view==='org'||S.view==='bilan'?S.view:'carnet';
@@ -351,13 +358,14 @@ function render(){const cl=allCls(),has=E.length>0,V=S.view==='org'||S.view==='b
  if(V==='org')return renderOrg();
  if(!has){$('#view').innerHTML=`<div class="empty"><b>Aucune liste d'élèves sur cet appareil</b>Importez directement l'export Pronote de vos classes (.csv, plusieurs fichiers possibles),<br>ou ouvrez SuiviProf EPS depuis le portail Mes Apps EPS : la liste y est partagée automatiquement.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="list">📂 Importer une liste Pronote (.csv)</button><button class="btn r" data-g="demo">🧪 Essayer avec une classe exemple</button></div></div>`;return}
  if(!cl.includes(S.classe))S.classe=cl[0];
- $('#cls').innerHTML=cl.map(c=>`<option ${c===S.classe?'selected':''}>${esc(c)}</option>`).join('');
+ {const G=grpCls(),opt=c=>`<option value="${esc(c)}" ${c===S.classe?'selected':''}>${esc(c)}</option>`;
+  $('#cls').innerHTML=G.length?`<optgroup label="Classes">${cl.filter(c=>!G.includes(c)).map(opt).join('')}</optgroup><optgroup label="Groupes d'enseignement">${G.map(opt).join('')}</optgroup>`:cl.map(opt).join('')}
  if(V==='bilan')return renderBilan();
  const k=C();if(AUTO){AUTO=false;const f=focusSeance(k);FOC=f?f.s.id:null;if(f)k.tab=f.c.id;$('#view').dataset.cy=''}
  if(!k.cycles.some(c=>c.id===k.tab))k.tab=[...k.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9'))[0]?.id||null;
  $('#tabs').innerHTML=[...k.cycles].sort((a,b)=>(a.du||'9').localeCompare(b.du||'9')).map(c=>`<button class="tab ${c.id===k.tab?'on':''}" data-t="${c.id}" title="${esc(CAS[c.ca]||'')}">${esc(cyName(c))}</button>`).join('')
   +`<button class="tab add" data-g="cycle">＋ Cycle</button>`;
- if(!k.tab){$('#view').innerHTML=`<div class="empty"><b>Aucun cycle pour la classe ${esc(S.classe)}</b>Créez un cycle ici, ou programmez d'un coup tous les cycles de l'année (dates, créneaux, APSA) dans l'Organisation annuelle.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="cycle">＋ Cycle</button><button class="btn r" data-nav="org" data-oc="${esc(S.classe)}">📅 Organisation annuelle</button></div></div>`;return}
+ if(!k.tab){$('#view').innerHTML=`<div class="empty"><b>Aucun cycle pour ${grpCls().includes(S.classe)?'le groupe':'la classe'} ${esc(S.classe)}</b>Créez un cycle ici, ou programmez d'un coup tous les cycles de l'année (dates, créneaux, APSA) dans l'Organisation annuelle.<div class="bar" style="justify-content:center;margin-top:16px"><button class="btn" data-g="cycle">＋ Cycle</button><button class="btn r" data-nav="org" data-oc="${esc(S.classe)}">📅 Organisation annuelle</button></div></div>`;return}
  renderCycle()}
 
 function renderCycle(){const c=cy(),L=pupils(),v=$('#view');
@@ -468,7 +476,7 @@ function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().pe
 
 /* ───── Fiche élève (synthèse) ───── */
 function fiche(id){const e=E.find(x=>x.id===id);if(!e)return;const a=agg(e);
- let h=`<h3>${esc(e.nom.toUpperCase())} ${esc(e.prenom)} · ${esc(e.classe)}</h3><div class="chips"><span>${a.se} séance(s)</span><span>Abs. ${a.A+a.VS}${a.VS?' (dont VS '+a.VS+')':''}</span><span>Ret. ${a.R}</span><span>👕 ${a.ten}</span><span>🩹 ${a.inf}</span><span>🩺 ${a.dis}</span><span>⚖️ +${a.pl} / −${a.mo} / ⚠${a.inc}</span>${Object.entries(caAgg(e)).filter(([,x])=>x.se).sort().map(([k,x])=>`<span title="${esc(CAS[k])}">${k} ${x.pr}/${x.se}</span>`).join('')}</div><div class="fi">`;
+ let h=`<h3>${esc(e.nom.toUpperCase())} ${esc(e.prenom)} · ${esc(e.classe)}${grpOf(e).length?` <span class="help">(groupe${grpOf(e).length>1?'s':''} : ${esc(grpOf(e).join(', '))})</span>`:''}</h3><div class="chips"><span>${a.se} séance(s)</span><span>Abs. ${a.A+a.VS}${a.VS?' (dont VS '+a.VS+')':''}</span><span>Ret. ${a.R}</span><span>👕 ${a.ten}</span><span>🩹 ${a.inf}</span><span>🩺 ${a.dis}</span><span>⚖️ +${a.pl} / −${a.mo} / ⚠${a.inc}</span>${Object.entries(caAgg(e)).filter(([,x])=>x.se).sort().map(([k,x])=>`<span title="${esc(CAS[k])}">${k} ${x.pr}/${x.se}</span>`).join('')}</div><div class="fi">`;
  {const K=C(),PP=[...perOf(S.classe),{key:'an',nom:'Année',du:'',au:''}],rows=PP.map(p=>{const m=moy(notes(K,id,p.key==='an'?null:p)),ap=((K.cc||{})[p.key]||{})[id];return m!=null||ap?`<div class="se"><b>${esc(p.nom)}</b>${m!=null?` · moyenne <b>${f20(m)}/20</b>`:''}${ap?`<br>${esc(ap)}`:''}</div>`:''}).join('');
   if(rows)h+=`<h4>Moyennes et appréciations</h4>`+rows}
  const P=C().disp.filter(d=>d.eleve===id);if(P.length)h+=`<h4>Périodes de dispense</h4>`+P.map(d=>`<div class="se">${esc(TYPES.dispense.lab[d.type])} du ${esc(frD(d.du))} ${d.au?'au '+esc(frD(d.au)):'(sans fin)'} ${esc(d.motif||'')}</div>`).join('');
@@ -479,7 +487,7 @@ function fiche(id){const e=E.find(x=>x.id===id);if(!e)return;const a=agg(e);
 
 /* ───── Fenêtres ───── */
 function modal(h,bind){$('#mo').innerHTML=h;$('#ov').hidden=false;bind&&bind($('#mo'));const f=$('#mo').querySelector('input:not([type=checkbox]),select');f&&f.focus()}
-let DIRTY=false;const close=()=>{$('#ov').hidden=true;if(DIRTY){DIRTY=false;render()}};
+let DIRTY=false,PEND=null;const close=()=>{$('#ov').hidden=true;if(PEND){const f=PEND;PEND=null;f(null)}if(DIRTY){DIRTY=false;render()}};
 $('#ov').onclick=e=>{if(e.target.id==='ov'||e.target.dataset.m==='close')close()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 function confirmBtn(btn,fn){btn.onclick=()=>{if(btn.dataset.ok){fn();return}btn.dataset.ok=1;btn.textContent='Confirmer la suppression ?'}}
@@ -620,7 +628,7 @@ function restaurerCarnet(j){const c=j&&j.format==='SuiviProf-sauvegarde'?j.carne
   try{localStorage.setItem(CE_KEY,JSON.stringify(Object.assign({auto:false},j.compeval,cur)))}catch(e){}msg=` Données CompEval fusionnées (${ng} grille(s) ajoutée(s)).`}
  save();return msg}
 async function sync(quiet){const st=$('#st');try{let n=0;
-  for(const e of E){if(!S.classes[e.classe])continue;const l=lignes(e.id,e.classe);const had=e.ext&&e.ext[APP];if(!l.length&&!had)continue;await EPS.setExt(APP,e.id,{lignes:l});n+=l.length}
+  for(const e of E){const cs=carnetsOf(e).filter(c=>S.classes[c]);if(!cs.length)continue;const l=cs.flatMap(c=>lignes(e.id,c).map(o=>cs.length>1||c!==e.classe?Object.assign({Carnet:c},o):o));const had=e.ext&&e.ext[APP];if(!l.length&&!had)continue;await EPS.setExt(APP,e.id,{lignes:l});n+=l.length}
   st.style.color='var(--ok)';st.textContent=quiet?'✓ enregistré':`✅ ${n} ligne(s) enregistrée(s) dans Mes Apps EPS`;E=await EPS.all();return true}
  catch(x){st.style.color='var(--ko)';st.textContent='❌ '+(x.message||x);return false}}
 async function exportX(){if(!await sync())return;const st=$('#st');
@@ -628,7 +636,7 @@ async function exportX(){if(!await sync())return;const st=$('#st');
  catch(x){st.style.color='var(--ko)';st.textContent='❌ '+(x.message||x)}}
 async function demo(){const N=[['ELEVE1','Prénom1','F'],['ELEVE2','Prénom2','F'],['ELEVE3','Prénom3','M'],['ELEVE4','Prénom4','M'],['ELEVE5','Prénom5','M'],['ELEVE6','Prénom6','M'],['ELEVE7','Prénom7','F'],['ELEVE8','Prénom8','M'],['ELEVE9','Prénom9','M'],['ELEVE10','Prénom10','M'],['ELEVE11','Prénom11','F'],['ELEVE12','Prénom12','M'],['ELEVE13','Prénom13','F'],['ELEVE14','Prénom14','M'],['ELEVE15','Prénom15','F'],['ELEVE16','Prénom16','M']];
  for(const[nom,prenom,sexe]of N)await EPS.putEleve({nom,prenom,classe:'2NDE DEMO',sexe});E=await EPS.all();
- const cl='2NDE DEMO';S.classe=cl;if(!S.classes[cl]||!S.classes[cl].cycles.length){S.classes[cl]={cycles:[],disp:[],tab:null};const K=S.classes[cl],L=E.filter(e=>e.classe===cl);
+ const cl='2NDE DEMO';S.classe=cl;if(!S.classes[cl]||!S.classes[cl].cycles.length){S.classes[cl]={cycles:[],disp:[],tab:null};const K=S.classes[cl],L=E.filter(e=>inCl(e,cl));
   const c={id:uid(),nom:'Athlétisme',ca:'CA1',seq:0,seances:[],vals:{}};K.cycles.push(c);K.tab=c.id;
   const d=n=>{const x=new Date();x.setDate(x.getDate()-n);return iso(x)};
   const s1={id:uid(),date:d(14),titre:'Test 6 min (VMA)',cols:[...MARK.map(k=>newCol(c,k)),newCol(c,'distance','Distance 6 min')]};
@@ -802,10 +810,18 @@ $('#view').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.target.tagName!=
  const nx=(e.shiftKey?tr.previousElementSibling:tr.nextElementSibling)?.children[i]?.querySelector('input');e.target.blur();nx&&nx.focus()});
 $('#cls').onchange=e=>{S.classe=e.target.value;AUTO=true;save();render()};
 $('#bBak').onclick=()=>sauvegarderCarnet();$('#bSync').onclick=()=>sync();$('#bXls').onclick=exportX;
+/* Fichier Pronote réunissant plusieurs classes : proposer un groupe d'enseignement (comme le portail, eps-core v2.5) */
+function choixGroupe(a){return new Promise(ok=>{modal(`<h3>👥 Groupe d'enseignement ?</h3><p class="help">Ce fichier réunit ${a.n} élève(s) de ${a.classes.length} classes : ${a.classes.map(c=>esc(c.nom||'?')+' ('+c.n+')').join(', ')}.</p>
+ <label>Nom du groupe<input id="grn" value="${esc(a.suggestion||'')}"></label><p class="help">Les élèves gardent leur classe et sont ajoutés à ce groupe, qui devient un carnet dans SuiviProf (comme une classe).</p>
+ <div class="bar"><button class="btn" id="gro">👥 Importer comme groupe</button><button class="btn r" id="grc">Classes séparées</button><span class="sp"></span><button class="btn r" id="gra">Annuler</button></div>`,m=>{
+  PEND=ok;const fin=v=>{PEND=null;close();ok(v)};
+  m.querySelector('#gro').onclick=()=>{const v=m.querySelector('#grn').value.trim();if(!v){m.querySelector('#grn').focus();return}fin({groupe:v})};
+  m.querySelector('#grc').onclick=()=>fin({});m.querySelector('#gra').onclick=()=>fin(null)})})}
 /* Import direct d'une ou plusieurs listes Pronote (.csv) ou Mes Apps EPS (.xlsx) : utilisable sans le portail */
 $('#fList').onchange=async e=>{const fs=[...e.target.files];e.target.value='';if(!fs.length)return;let add=0,upd=0;const err=[];
- for(const f of fs){try{const r=await EPS.importFile(f);add+=r.add??0;upd+=r.upd??0}catch(x){err.push(f.name+' : '+x.message)}}
- E=await EPS.all();AUTO=true;const n=new Set(E.map(x=>x.classe)).size;$('#st').style.color=err.length?'var(--ko)':'var(--ok)';
+ for(const f of fs){let opt={};if(!/\.xlsx$/i.test(f.name)){try{const a=await EPS.analyserCSV(f);if(a.classes.length>1){opt=await choixGroupe(a);if(opt===null){err.push(f.name+' : import annulé');continue}}}catch(x){}}
+  try{const r=await EPS.importFile(f,opt);add+=r.add??0;upd+=r.upd??0}catch(x){err.push(f.name+' : '+x.message)}}
+ E=await EPS.all();AUTO=true;const n=allCls().length;$('#st').style.color=err.length?'var(--ko)':'var(--ok)';
  $('#st').textContent=`${err.length?'⚠':'✅'} ${fs.length} fichier(s) : ${add} élève(s) ajouté(s), ${upd} mis à jour · ${n} classe(s)`+(err.length?' · '+err.join(' ; '):'');close();render()};
 $('#fJson').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());const msg=restaurerCarnet(j);close();render();$('#st').style.color='var(--ok)';$('#st').textContent='✅ Carnet restauré.'+msg}catch(x){const m=$('#sm')||$('#st');if(m)m.textContent='❌ '+x.message}};
 

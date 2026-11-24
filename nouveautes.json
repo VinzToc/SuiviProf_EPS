@@ -1,5 +1,16 @@
 [
  {
+  "v": "0.12.1",
+  "date": "2026-11-24",
+  "titre": "Groupes d'enseignement",
+  "items": [
+   "Correctif : les groupes d'enseignement retrouvent tous leurs élèves. Depuis la mise à jour du portail, un élève garde sa classe et appartient en plus à son ou ses groupes : SuiviProf en tient compte.",
+   "La liste en haut de l'écran sépare les classes et les groupes d'enseignement ; la colonne « Classe » du carnet indique la classe d'origine de chaque élève.",
+   "Import Pronote : un fichier qui réunit plusieurs classes peut être importé comme groupe d'enseignement (les élèves gardent leur classe).",
+   "Les saisies des groupes sont de nouveau envoyées à Mes Apps EPS (avec le nom du carnet)."
+  ]
+ },
+ {
   "v": "0.12.0",
   "date": "2026-11-24",
   "titre": "Import direct des listes Pronote",

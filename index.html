@@ -19,7 +19,7 @@ body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-seri
 body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 8% 4%,rgba(46,211,160,.16),transparent 55%),radial-gradient(ellipse at 94% 96%,rgba(47,155,255,.2),transparent 55%)}
 header{display:flex;align-items:center;gap:12px;padding:12px 14px 6px;flex-wrap:wrap}
 h1{margin:0;font-size:1.35rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;background:linear-gradient(90deg,#4fb3ff,#2ed3a0 55%,#5fe07a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
-.sp{flex:1}.lg{width:42px;height:42px;border-radius:11px;flex:none}
+.sp{flex:1}.bil{--w0:250px}.bil .st0{white-space:normal;text-overflow:clip}.bil .st0 .nm{white-space:normal;overflow:visible;line-height:1.25}.lg{width:42px;height:42px;border-radius:11px;flex:none}
 main{padding:0 14px 40px}
 .btn{border:0;border-radius:12px;padding:9px 14px;font:inherit;font-weight:800;font-size:.86rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,#16a9b0,#2fbf5c);box-shadow:0 4px 14px #16a9b040;min-height:40px;white-space:nowrap}
 .btn.b{background:linear-gradient(135deg,#2f9bff,#0a4fd0);box-shadow:0 4px 14px #0a4fd045}
@@ -110,7 +110,7 @@ td select.in{width:auto;text-align:left}
 .wks button b{float:right;font-size:.95rem}.wks .A b{color:var(--c1)}.wks .B b{color:var(--c2)}.wks .fl{border-color:var(--c3)}.wks .vac{opacity:.35;cursor:default}.wks small{color:var(--mut)}
 .cyt{width:100%;font-size:.85rem;border-collapse:collapse}.cyt td{white-space:normal;text-align:left;vertical-align:top;background:transparent!important;padding:6px 4px}.cyt input[type=date]{padding:5px 6px;font-size:14px}
 .ok{color:var(--ok)}
-@media(max-width:600px){:root{--w0:128px;--w1:56px}header{padding:10px}h1{font-size:1.1rem}.hide-s{display:none}.grid{max-height:calc(100vh - 235px)}}
+@media(max-width:600px){:root{--w0:128px;--w1:56px}.bil{--w0:150px}header{padding:10px}h1{font-size:1.1rem}.hide-s{display:none}.grid{max-height:calc(100vh - 235px)}}
 </style>
 
 
@@ -370,7 +370,7 @@ function renderBilan(){$('#view').dataset.cy='';const L=pupils(),K=C(),PS=O().pe
     const col=g[0].col,dir=bestDir(col),best=vs.reduce((a,b)=>(dir==='min'?b[1]<a[1]:b[1]>a[1])?b:a),f=vs[0][1],l=vs[vs.length-1][1];
     const pg=vs.length>1?((dir==='min'?l<f:l>f)?`<span class="up">▲ ${fmt(col,Math.abs(l-f))}</span>`:l===f?'':`<span class="dn">▼ ${fmt(col,Math.abs(l-f))}</span>`):'';
     return `<td title="${esc(vs.map(y=>'S'+(y[0].si+1)+' : '+fmt(y[0].col,y[1])).join(' | '))}"><b>${esc(fmt(col,best[1]))}</b> ${pg}</td>`}).join('')+'</tr>').join('')+'</tbody></table></div></div>'}
- $('#view').innerHTML=h}
+ $('#view').innerHTML='<div class="bil">'+h+'</div>'}
 
 /* ───── Fiche élève (synthèse) ───── */
 function fiche(id){const e=E.find(x=>x.id===id);if(!e)return;const a=agg(e);

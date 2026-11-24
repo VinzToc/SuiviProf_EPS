@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.6.4",
+  "date": "2026-11-24",
+  "titre": "Mise à jour du 24 novembre 2026",
+  "items": [
+   "Bilan : la colonne « Élève » est élargie, les noms et prénoms longs s'affichent en entier (sur deux lignes si besoin).",
+   "Correction du fonctionnement hors ligne."
+  ]
+ },
+ {
   "v": "0.6.3",
   "date": "2026-11-23",
   "items": [

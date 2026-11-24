@@ -1,5 +1,13 @@
 [
  {
+  "v": "0.7.1",
+  "date": "2026-11-24",
+  "titre": "Mise à jour du 24 novembre 2026",
+  "items": [
+   "Le carnet s'ouvre sur la séance du jour, ou à défaut sur la prochaine séance de la classe (signalée « prochaine séance »). La dernière séance passée n'est retenue qu'en fin d'année, quand plus aucune séance n'est à venir."
+  ]
+ },
+ {
   "v": "0.7.0",
   "date": "2026-11-24",
   "titre": "Mise à jour du 24 novembre 2026",

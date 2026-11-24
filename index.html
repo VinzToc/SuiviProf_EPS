@@ -102,8 +102,9 @@ td select.in{width:auto;text-align:left}
 .chips span{background:rgba(255,255,255,.08);border-radius:20px;padding:3px 10px;font-size:.8rem;font-weight:700}
 .dl{width:100%;font-size:.85rem}.dl td{text-align:left;white-space:normal}
 td.fut,.fut>b,.fut>small,.fut .fold{opacity:.45}
+.fut.cur>b,.fut.cur>small{opacity:1}
 .btn.fd{display:block;margin:4px auto 2px;width:100%;min-height:36px;background:linear-gradient(135deg,#1976d2,#16b3a8 60%,#34c759);box-shadow:0 3px 10px #16b3a840;font-size:.82rem}
-th.cur{box-shadow:inset 0 -3px 0 var(--c1)}th.sh.cur b::after{content:' ● séance en cours';color:var(--c1);font-size:.7rem;font-weight:800}.ann{opacity:.4;text-decoration:line-through}th.today{box-shadow:inset 0 -3px 0 var(--ok)}
+th.cur{box-shadow:inset 0 -3px 0 var(--c1)}th.sh.cur.fut{box-shadow:inset 0 -3px 0 var(--c2)}th.sh.cur.fut b::after{content:' ● prochaine séance';color:#6fb7ff}th.sh.cur b::after{content:' ● séance en cours';color:var(--c1);font-size:.7rem;font-weight:800}.ann{opacity:.4;text-decoration:line-through}th.today{box-shadow:inset 0 -3px 0 var(--ok)}
 .og{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:12px}.og .card{margin:0}
 .rw{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:5px 0}.rw input,.rw select{padding:6px 8px;font-size:15px}.rw input[type=text]{flex:1;min-width:120px}
 .rw label{margin:0}.rw label input,.rw label select{margin-top:2px}
@@ -264,8 +265,9 @@ async function vacNet(){const o=O(),y=+o.debut.slice(0,4),z=o.zone==='Corse'?'Co
  for(const x of j.results||[]){if(/enseignant/i.test(x.population||''))continue;const du=iso(new Date(x.start_date)),au=addD(iso(new Date(x.end_date)),-1);if(du>o.fin||au<o.debut)continue;const k=x.description+du;if(!m.has(k))m.set(k,{nom:x.description,du,au})}
  const L=[...m.values()].sort((a,b)=>a.du.localeCompare(b.du));if(!L.length)throw new Error('aucune donnée pour cette zone');return L}
 let FOC=null,AUTO=true;
-/* Séance du jour, sinon dernière séance passée non annulée de la classe */
-function focusSeance(K){let best=null;for(const c of K.cycles)for(const s of c.seances){if(s.annulee||s.date>today())continue;const k=s.date+(s.heure||'');if(!best||k>best.k)best={k,c,s}}return best}
+/* Séance du jour, sinon prochaine séance ; en fin d'année (plus aucune séance à venir) : dernière séance passée */
+function focusSeance(K){const d=today();let nx=null,pv=null;for(const c of K.cycles)for(const s of c.seances){if(s.annulee)continue;const k=s.date+(s.heure||'');
+  if(s.date>=d){if(!nx||k<nx.k)nx={k,c,s}}else if(!pv||k>pv.k)pv={k,c,s}}return nx||pv}
 const folded=(s,c=cy())=>s.fold!=null?s.fold:s.id!==FOC&&(!!s.annulee||s.date>today()||(s.date<today()&&!hasData(c,s)));
 const done=s=>!s.annulee&&s.date<=today();
 const crLab=c=>`${JOURS[c.jour]} ${c.hd}–${c.hf}${c.sem==='AB'?'':' · sem. '+c.sem}`;

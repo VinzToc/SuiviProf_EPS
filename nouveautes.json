@@ -1,5 +1,14 @@
 [
  {
+  "v": "0.9.1",
+  "date": "2026-11-24",
+  "titre": "Mise à jour du 24 novembre 2026",
+  "items": [
+   "Import de la programmation d'équipe : la programmation est préparée en fin d'année avec des noms de classes prévus. Si un nom ne correspond pas à votre liste Pronote, choisissez la classe réelle dans la fenêtre d'import (le choix est retenu pour les imports suivants).",
+   "Les dates d'évaluation prévues par le coordonnateur (fin de cycle, CCF, rattrapage…) nomment automatiquement les séances correspondantes ; un titre que vous avez saisi n'est jamais remplacé."
+  ]
+ },
+ {
   "v": "0.9.0",
   "date": "2026-11-24",
   "titre": "Mise à jour du 24 novembre 2026",

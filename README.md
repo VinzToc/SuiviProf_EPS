@@ -16,4 +16,6 @@ Ajouter la ligne de `apps.json-ligne.txt` dans `apps.json` du portail.
 ## Programmation d'équipe (CoordoEPS)
 - Organisation annuelle → « 📥 Importer la programmation d'équipe » : fichier `.json` produit par CoordoEPS (application du coordonnateur), ou directement depuis CoordoEPS ouvert dans le même navigateur.
 - Choix de l'enseignant (classes cochées automatiquement, créneaux filtrés dans les classes partagées), reprise du calendrier de l'équipe, génération des séances.
+- Correspondance des classes : la programmation est faite en fin d'année avec des noms prévus ; une classe absente de la liste Pronote se rattache à une classe réelle (proposition automatique si seuls espaces/casse diffèrent ; choix mémorisé dans `S.progMap`).
+- Évaluations : les dates des cycles (`evals`) donnent leur titre aux séances concernées (marquées `evt`) ; un titre saisi par l'enseignant n'est jamais remplacé.
 - Créneaux importés marqués `pg:1` (id du coordonnateur), cycles importés marqués `pg:<id du cycle CoordoEPS>` : un réimport met à jour sans dupliquer ; cycles retirés supprimés seulement s'ils n'ont aucune saisie.

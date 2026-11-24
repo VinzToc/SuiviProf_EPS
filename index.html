@@ -679,34 +679,49 @@ $('#fProg').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
 function progModal(P){const pr=P.profs||[],pnm=id=>{const p=pr.find(x=>x.id===id);return p?(p.nom+' '+(p.prenom||'')).trim():''},mine=allCls();
  const cls=Object.keys(P.classes).filter(cl=>{const k=P.classes[cl];return(k.cren||[]).length||(k.cycles||[]).length}).sort((a,b)=>a.localeCompare(b,'fr',{numeric:true}));
  const teach=(pid,cl)=>{const k=P.classes[cl];return k.prof===pid||(k.cren||[]).some(c=>c.prof===pid)};
+ const nz=v=>String(v||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+ const guess=cl=>{const m=(S.progMap||{})[cl];if(m&&mine.includes(m))return m;return mine.find(c=>nz(c)===nz(cl))||''};
  modal(`<h3>📥 Programmation ${esc(P.etab||'de l\'équipe')} ${esc(P.annee||'')}</h3><p class="help">Préparée par ${esc(P.auteur||'le coordonnateur')}${P.genere?' le '+esc(new Date(P.genere).toLocaleDateString('fr-FR')):''} · ${cls.length} classe(s) programmée(s).</p>
  <form id="f"><label>Je suis<select name="me"><option value="">— toute l'équipe (toutes les classes) —</option>${pr.map(p=>`<option value="${esc(p.id)}">${esc(pnm(p.id))}</option>`).join('')}</select></label>
- <label>Classes à importer</label><div class="refs" id="pcl" style="max-height:260px"></div>
+ <label>Classes à importer</label><div class="refs" id="pcl" style="max-height:300px"></div>
+ <p class="help">La programmation a été préparée avec des noms de classes prévus, avant les listes Pronote. Si un nom prévu ne correspond pas à votre liste, choisissez la classe réelle dans le menu (ou gardez le nom prévu).</p>
  <label class="chk"><input type="checkbox" name="cal" checked> Reprendre le calendrier de l'équipe (année, vacances, fériés, semaines A/B, interruptions, trimestres/semestres)</label>
- <label class="chk"><input type="checkbox" name="gen" checked> Générer les séances des cycles importés</label>
+ <label class="chk"><input type="checkbox" name="gen" checked> Générer les séances des cycles importés (les séances d'évaluation sont nommées : fin de cycle, CCF…)</label>
  <p class="help">Les créneaux et cycles importés remplacent ceux d'un import précédent ; vos cycles créés à la main et toutes vos saisies sont conservés. Un cycle retiré par le coordonnateur n'est supprimé que s'il ne contient aucune saisie.</p>
  <div class="bar"><button class="btn">📥 Importer</button><span class="sp"></span><button type="button" class="btn r" data-m="close">Annuler</button></div><p class="msg" id="pm"></p></form>`,m=>{
-  const f=m.querySelector('#f'),draw=()=>{const me=f.me.value;m.querySelector('#pcl').innerHTML=cls.map(cl=>{const k=P.classes[cl];return `<label class="chk"><input type="checkbox" name="cl" value="${esc(cl)}" ${!me||teach(me,cl)?'checked':''}> <b>${esc(cl)}</b> <span class="help">${esc(pnm(k.prof)||'—')} · ${(k.cren||[]).length} créneau(x) · ${(k.cycles||[]).length} cycle(s)${mine.includes(cl)?'':' · ⚠ absente de votre liste d\'élèves'}</span></label>`}).join('')||'<p class="help">Aucune classe programmée dans ce fichier.</p>'};
+  const f=m.querySelector('#f'),draw=()=>{const me=f.me.value;m.querySelector('#pcl').innerHTML=cls.map(cl=>{const k=P.classes[cl],ok=mine.includes(cl),g=ok?cl:guess(cl);
+   return `<div class="chk" style="flex-wrap:wrap"><input type="checkbox" name="cl" value="${esc(cl)}" ${!me||teach(me,cl)?'checked':''} aria-label="${esc(cl)}"> <b>${esc(cl)}</b>
+   ${ok?'':`<span class="help">→</span><select data-map="${esc(cl)}" style="padding:4px 6px;font-size:14px" aria-label="Classe réelle"><option value="">garder « ${esc(cl)} »</option>${mine.map(c=>`<option ${c===g?'selected':''}>${esc(c)}</option>`).join('')}</select>`}
+   <span class="help" style="flex-basis:100%;margin:0 0 0 28px">${esc(pnm(k.prof)||'—')} · ${(k.cren||[]).length} créneau(x) · ${(k.cycles||[]).length} cycle(s)${ok||mine.length?'':' · ⚠ aucune liste d\'élèves sur cet appareil'}</span></div>`}).join('')||'<p class="help">Aucune classe programmée dans ce fichier.</p>'};
   const me0=P.pour||S.progMoi||'';if(pr.some(p=>p.id===me0))f.me.value=me0;f.me.onchange=draw;draw();
-  f.onsubmit=e=>{e.preventDefault();const L=[...f.querySelectorAll('[name=cl]:checked')].map(x=>x.value);if(!L.length){m.querySelector('#pm').textContent='⚠ Cochez au moins une classe';return}
-   S.progMoi=f.me.value;const r=applyProg(P,f.me.value,L,f.cal.checked,f.gen.checked);
-   OM=`✅ ${L.length} classe(s) importée(s) : ${r.nc} cycle(s) créé(s), ${r.nu} mis à jour${r.nd?', '+r.nd+' retiré(s)':''}${f.gen.checked?', '+r.ad+' séance(s) ajoutée(s)':''}`;
-   if(!S.orgCl||!L.includes(S.orgCl))S.orgCl=L.find(c=>mine.includes(c))||S.orgCl;if(!L.includes(S.classe)&&!(S.classes[S.classe]?.cycles||[]).length){const c=L.find(c=>mine.includes(c));if(c)S.classe=c}
+  f.onsubmit=e=>{e.preventDefault();const L=[...f.querySelectorAll('[name=cl]:checked')].map(x=>{const s=f.querySelector(`[data-map="${CSS.escape(x.value)}"]`);return[x.value,(s&&s.value)||x.value]});
+   if(!L.length){m.querySelector('#pm').textContent='⚠ Cochez au moins une classe';return}
+   const T=L.map(x=>x[1]);if(new Set(T).size<T.length){m.querySelector('#pm').textContent='⚠ Deux classes prévues pointent vers la même classe réelle';return}
+   S.progMoi=f.me.value;S.progMap=S.progMap||{};L.forEach(([a,b])=>{if(a!==b)S.progMap[a]=b;else delete S.progMap[a]});
+   const r=applyProg(P,f.me.value,L,f.cal.checked,f.gen.checked);
+   OM=`✅ ${L.length} classe(s) importée(s) : ${r.nc} cycle(s) créé(s), ${r.nu} mis à jour${r.nd?', '+r.nd+' retiré(s)':''}${f.gen.checked?', '+r.ad+' séance(s) ajoutée(s), '+r.ne+' séance(s) d\'évaluation':''}`;
+   if(!S.orgCl||!T.includes(S.orgCl))S.orgCl=T.find(c=>mine.includes(c))||S.orgCl;if(!T.includes(S.classe)&&!(S.classes[S.classe]?.cycles||[]).length){const c=T.find(c=>mine.includes(c));if(c)S.classe=c}
    S.view='org';save();close();render()}})}
-function applyProg(P,me,L,cal,gen){const inst=id=>(P.inst||[]).find(i=>i.id===id)?.nom||'';let nc=0,nu=0,nd=0,ad=0;
+/* L : [[classe prévue dans CoordoEPS, classe réelle dans SuiviProf], …] */
+function applyProg(P,me,L,cal,gen){const inst=id=>(P.inst||[]).find(i=>i.id===id)?.nom||'';let nc=0,nu=0,nd=0,ad=0,ne=0;
+ const evT=t=>t==='Fin de cycle'?'Évaluation de fin de cycle':t==='Diagnostique'?'Évaluation diagnostique':t==='Intermédiaire'?'Évaluation intermédiaire':t;
  if(cal&&P.org){S.org=JSON.parse(JSON.stringify(P.org));const o=O();o.flip=o.flip||[];o.inter=o.inter||[];o.vac=o.vac||[]}FER=WK=null;
- for(const cl of L){const src=P.classes[cl];if(!src)continue;const K=KL(cl),co=CO(cl);
+ for(const[pc,cl]of L){const src=P.classes[pc];if(!src)continue;const K=KL(cl),co=CO(cl);
   let cr=src.cren||[],part=false;if(me){const x=cr.filter(c=>(c.prof||src.prof)===me);if(x.length&&x.length<cr.length){cr=x;part=true}}
   const ids=new Set(cr.map(c=>c.id));if(src.eval)co.eval=src.eval;
   co.cren=[...co.cren.filter(c=>!c.pg&&!ids.has(c.id)),...cr.map(c=>({id:c.id,jour:+c.jour,hd:c.hd,hf:c.hf,sem:c.sem||'AB',lieu:inst(c.inst),pg:1}))];
   const keep=new Set();
   for(const s of src.cycles||[]){const cc=(s.cren||[]).filter(id=>ids.has(id));if(part&&!cc.length)continue;keep.add(s.id);
    let c=K.cycles.find(x=>x.pg===s.id);if(c)nu++;else{c={id:uid(),pg:s.id,seq:0,seances:[],vals:{}};K.cycles.push(c);nc++}
-   Object.assign(c,{nom:s.nom||'Cycle',ca:s.ca||'',du:s.du||'',au:s.au||'',cren:cc,lieu:inst(s.inst)||[...new Set(cr.filter(x=>cc.includes(x.id)).map(x=>inst(x.inst)).filter(Boolean))].join(' / ')})}
+   Object.assign(c,{nom:s.nom||'Cycle',ca:s.ca||'',du:s.du||'',au:s.au||'',cren:cc,evals:(s.evals||[]).filter(v=>v.date).map(v=>({type:v.type,date:v.date})),lieu:inst(s.inst)||[...new Set(cr.filter(x=>cc.includes(x.id)).map(x=>inst(x.inst)).filter(Boolean))].join(' / ')})}
   K.cycles=K.cycles.filter(c=>{if(!c.pg||keep.has(c.pg))return true;if(c.seances.some(s=>hasData(c,s)))return true;nd++;return false});
   if(K.tab&&!K.cycles.some(c=>c.id===K.tab))K.tab=null;
-  if(gen)for(const c of K.cycles)if(c.pg&&c.du&&c.au&&c.cren.length)ad+=generate(cl,c).add}
- S.prog={etab:P.etab||'',annee:P.annee||'',auteur:P.auteur||'',genere:P.genere||'',date:new Date().toISOString()};return{nc,nu,nd,ad}}
+  if(gen)for(const c of K.cycles){if(!c.pg)continue;if(c.du&&c.au&&c.cren.length)ad+=generate(cl,c).add;
+   /* séances d'évaluation : titre posé par l'import (s.evt), jamais un titre saisi par l'enseignant */
+   for(const s of c.seances)if(s.evt&&!(c.evals||[]).some(v=>v.date===s.date)){if(s.titre===s.evt)s.titre='';delete s.evt}
+   const G=new Map();for(const v of c.evals||[])G.set(v.date,[...(G.get(v.date)||[]),evT(v.type)]);
+   for(const[d,ts]of G){const s=c.seances.find(x=>x.date===d&&!x.annulee);if(!s)continue;const t=[...new Set(ts)].join(' + ');if(!s.titre||s.titre===s.evt){s.titre=t;s.evt=t}ne++}}}
+ S.prog={etab:P.etab||'',annee:P.annee||'',auteur:P.auteur||'',genere:P.genere||'',date:new Date().toISOString()};return{nc,nu,nd,ad,ne}}
 
 /* ───── Événements ───── */
 document.addEventListener('click',e=>{const n=e.target.closest('[data-nav]');if(!n)return;const v=n.dataset.nav;if(v==='set')return setModal();

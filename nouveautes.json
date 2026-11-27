@@ -1,5 +1,12 @@
 [
  {
+  "v": "0.14.1",
+  "date": "2026-11-27",
+  "items": [
+   "Module de données élèves (eps-core) harmonisé en version 2.7 : import des classes, groupes et fichiers Excel plus fiables."
+  ]
+ },
+ {
   "v": "0.14.0",
   "date": "2026-11-27",
   "titre": "Barème des grilles CompEval",

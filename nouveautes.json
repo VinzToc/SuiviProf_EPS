@@ -1,5 +1,15 @@
 [
  {
+  "v": "0.14.0",
+  "date": "2026-11-27",
+  "titre": "Barème des grilles CompEval",
+  "items": [
+   "Une modification de barème ou de répartition des points faite dans CompEval est maintenant reprise ici : les notes déjà saisies sont recalculées (à l'ouverture, ou aussitôt si CompEval est enregistré dans un autre onglet).",
+   "Nouveau bouton « ⚖️ Barème » dans la fenêtre d'une colonne « Grille CompEval » (appui sur l'en-tête de la colonne) : barème en % du total ou en points, note sur…, arrondi.",
+   "Le barème modifié ici s'applique à toutes les séances qui utilisent la grille et à la grille de CompEval."
+  ]
+ },
+ {
   "v": "0.13.1",
   "date": "2026-11-24",
   "titre": "Boutons de séance plus visibles",

@@ -117,6 +117,7 @@ td.fut,.fut>small,.fut .fold{opacity:.45}.sh.fut>b{color:rgba(156,242,201,.5)}
 #mo:has(.gt){width:min(980px,100%)}
 .gt{border-collapse:separate;border-spacing:4px;width:100%;font-size:.8rem}
 .gt th{background:rgba(255,255,255,.07);padding:6px 8px;border-radius:8px;white-space:normal;text-align:left;font-size:.78rem;min-width:110px}
+.bt input{width:66px;padding:4px 6px}.bt td{padding:4px!important;text-align:center}.bt th small{display:block;font-weight:600;opacity:.85}
 .gt td{padding:0;background:none!important;border:0;white-space:normal;vertical-align:stretch}
 .gk{width:100%;height:100%;min-height:56px;min-width:110px;border:1.5px solid var(--lc);border-radius:9px;background:color-mix(in srgb,var(--lc) 14%,transparent);color:var(--tx);font:inherit;font-size:.76rem;cursor:pointer;padding:6px;text-align:left;line-height:1.25}
 .gk.on{background:var(--lc);color:var(--lt);font-weight:800;box-shadow:inset 0 0 0 2px #fff}
@@ -552,6 +553,47 @@ function ceSend(col,date,eid,v){try{const g=col.o&&col.o.g;if(!g||!gOk(g)||!date
  const P=j.pendEPS=Array.isArray(j.pendEPS)?j.pendEPS:[];if(!P.some(p=>p.gid===gid&&p.date===date&&p.eid===eid))P.push({gid,date,eid});
  localStorage.setItem(CE_KEY,JSON.stringify(j))}catch(e){}}
 
+/* ───── Barème d'une grille CompEval, modifiable depuis SuiviProf ─────
+   Le nouveau barème s'applique à toutes les colonnes du carnet qui utilisent cette grille (notes recalculées)
+   et à la grille de CompEval (même navigateur), qui réenregistre ensuite ses notes dans Mes Apps EPS. */
+const nb2=v=>(Math.round(gN(v)*100)/100).toLocaleString('fr-FR');
+function barModal(sea,col){const d=gClean(col.o.g);d.items.forEach(it=>{it.p=d.niveaux.map((n,j)=>(it.p||[])[j]??n.pts??0)});
+ const draw=()=>{const pct=d.mode==='pct',tot=d.items.reduce((a,it)=>a+gMaxIt(d,it),0);
+ modal(`<h3>⚖️ Barème · ${esc(d.nom)}</h3><p class="help">S'applique à toutes les séances du carnet qui utilisent cette grille (les notes sont recalculées) et à la grille dans CompEval.</p>
+ <form id="bf"><div class="bar" style="margin:0;align-items:flex-end;flex-wrap:wrap">
+  <label style="flex:1;min-width:150px">Barème<select name="mode"><option value="pct" ${pct?'selected':''}>% du total</option><option value="pts" ${pct?'':'selected'}>Points</option></select></label>
+  <label style="width:110px">Note sur<input name="sur" type="number" min="0" step="any" value="${esc(d.sur)}" title="0 = total des points"></label>
+  <label style="width:110px">Arrondi<select name="arrondi">${[[0,'aucun'],[.1,'0,1'],[.25,'0,25'],[.5,'0,5'],[1,'1']].map(([v,t])=>`<option value="${v}" ${gN(d.arrondi)===v?'selected':''}>${t}</option>`).join('')}</select></label></div>
+ <p class="help">${pct?'Chaque compétence vaut un nombre de points ; chaque niveau en rapporte un pourcentage.':'Chaque case indique les points rapportés par le niveau pour la compétence.'}</p>
+ <div class="scroll"><table class="gt bt"><thead><tr><th>Compétence</th>${pct?'<th>Points</th>':''}${d.niveaux.map((n,j)=>`<th style="background:${hexOk(n.couleur)};color:${txtOn(n.couleur)}">${esc(n.nom)}${pct?`<small><input data-l="${j}" type="number" min="0" max="100" step="any" value="${esc(n.pct)}"> %</small>`:''}</th>`).join('')}</tr></thead>
+ <tbody>${d.items.map((it,i)=>`<tr><th>${esc(it.nom)}</th>${pct?`<td><input data-ip="${i}" type="number" min="0" step="any" value="${esc(it.pts)}"></td>`:''}${d.niveaux.map((n,j)=>`<td>${pct?'':`<input data-c="${i}.${j}" type="number" min="0" step="any" value="${esc(it.p[j])}">`}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+ <p class="gn" id="btot">Total : <b>${nb2(tot)}</b> pts → note sur <b>${nb2(gN(d.sur)||tot)}</b></p>
+ <div class="bar"><button class="btn">Enregistrer le barème</button><button type="button" class="btn r" data-m="close">Annuler</button></div><p class="msg" id="bm"></p></form>`,m=>{
+ const f=m.querySelector('#bf'),upd=()=>{const t=d.items.reduce((a,it)=>a+gMaxIt(d,it),0);m.querySelector('#btot').innerHTML=`Total : <b>${nb2(t)}</b> pts → note sur <b>${nb2(gN(d.sur)||t)}</b>`};
+ f.mode.onchange=()=>{d.mode=f.mode.value;draw()};
+ f.sur.oninput=()=>{d.sur=gN(f.sur.value);upd()};f.arrondi.onchange=()=>{d.arrondi=gN(f.arrondi.value)};
+ m.querySelectorAll('[data-l]').forEach(x=>x.oninput=()=>{d.niveaux[+x.dataset.l].pct=gN(x.value);upd()});
+ m.querySelectorAll('[data-ip]').forEach(x=>x.oninput=()=>{d.items[+x.dataset.ip].pts=gN(x.value);upd()});
+ m.querySelectorAll('[data-c]').forEach(x=>x.oninput=()=>{const[i,j]=x.dataset.c.split('.').map(Number);d.items[i].p[j]=gN(x.value);upd()});
+ f.onsubmit=ev=>{ev.preventDefault();if(!(d.items.reduce((a,it)=>a+gMaxIt(d,it),0)>0)){m.querySelector('#bm').textContent='❌ Le total des points doit être supérieur à 0.';return}
+  const r=barApply(col,d);save();close();render();$('#st').style.color='var(--ok)';
+  $('#st').textContent=`✅ Barème enregistré : ${r.cols} colonne(s) recalculée(s)${r.ce?' · grille mise à jour dans CompEval':''}`}})};
+ draw()}
+function barApply(col,d){const B=g=>{g.mode=d.mode;g.sur=d.sur;g.arrondi=d.arrondi;
+  g.niveaux.forEach((n,j)=>{if(d.niveaux[j])n.pct=d.niveaux[j].pct});
+  g.items.forEach((it,i)=>{const x=d.items[i];if(!x)return;it.pts=x.pts;it.p=g.niveaux.map((_,j)=>x.p[j]??0)})};
+ const gid=col.o.gid;let ce=false;
+ // 1) CompEval : même grille (même identifiant) → barème mis à jour + notes à réenregistrer dans Mes Apps EPS
+ const j=gid?ceRead():null;if(j&&Array.isArray(j.grids)){const G=j.grids.find(x=>x.id===gid);
+  if(G&&G.items.length===d.items.length&&G.niveaux.length===d.niveaux.length){B(G);ce=true;
+   const P=j.pendEPS=Array.isArray(j.pendEPS)?j.pendEPS:[];for(const[date,o]of Object.entries((j.evals||{})[gid]||{}))for(const eid of Object.keys(o))if(!P.some(p=>p.gid===gid&&p.date===date&&p.eid===eid))P.push({gid,date,eid});
+   try{localStorage.setItem(CE_KEY,JSON.stringify(j))}catch(e){}}}
+ // 2) toutes les colonnes du carnet qui utilisent cette grille
+ let n=0;for(const K of Object.values(S.classes||{}))for(const c of K.cycles||[])for(const se of c.seances||[])for(const k of se.cols||[]){
+  if(k.type!=='grille'||!k.o||!gOk(k.o.g))continue;if(!(k===col||(gid&&k.o.gid===gid)))continue;
+  if(k.o.g.items.length!==d.items.length||k.o.g.niveaux.length!==d.niveaux.length)continue;B(k.o.g);n++}
+ return{cols:n,ce}}
+
 function gridModal(col,eid){const c=cy(),g=col.o.g,L=pupils(),i=L.findIndex(x=>x.id===eid),e=L[i];if(!e||!g)return;
  const sea=c.seances.find(x=>x.cols.includes(col)),v=raw(c,col,eid)||{},sc=gScore(g,v);DIRTY=true;
  modal(`<h3>🧩 ${esc(e.nom.toUpperCase())} ${esc(e.prenom)}</h3><p class="help">${esc(col.nom)}${g.nom!==col.nom?' · '+esc(g.nom):''}${g.activite&&g.activite!==col.nom?' · '+esc(g.activite):''} · S${c.seances.indexOf(sea)+1} ${esc(frD(sea.date))} · élève ${i+1}/${L.length} · <span title="Chaque saisie est aussi enregistrée dans CompEval (même navigateur), à la date de la séance">↔ CompEval</span></p>
@@ -596,6 +638,7 @@ function colModal(s,col){const c=cy();let type=col?.type||'texte';
   <label>Catégorie pour le bilan<select name="cat">${CATS.map(k=>`<option ${k===(col?.type===type?col.cat:TYPES[type].cat)?'selected':''}>${k}</option>`).join('')}</select></label>
   ${opts(o)}
   <div class="bar"><button class="btn">${col?'Enregistrer':'Ajouter'}</button><button type="button" class="btn r" data-m="close">Annuler</button><span class="sp"></span>
+  ${col&&col.type==='grille'&&type==='grille'&&gOk(col.o.g)?'<button type="button" class="btn b s" id="bar" title="Modifier le barème de cette grille (notes recalculées ici et dans CompEval)">⚖️ Barème</button>':''}
   ${col?'<button type="button" class="btn r s" id="mvl">◀</button><button type="button" class="btn r s" id="mvr">▶</button><button type="button" class="btn k" id="del">Supprimer</button>':''}</div></form>`,m=>{
   m.querySelectorAll('[data-ty]').forEach(b=>b.onclick=()=>{type=b.dataset.ty;CE_SEL=null;draw()});
   if(type==='grille'){const fm=m.querySelector('#f'),prev=()=>{const g=colGL[+fm.gsel.value];m.querySelector('#gprev').textContent=g?`${g.items.length} compétence(s) · ${g.niveaux.length} niveau(x) : ${g.niveaux.map(n=>n.nom).join(', ')} · note sur ${gN(g.sur)||'total des points'}`:''};
@@ -611,6 +654,7 @@ function colModal(s,col){const c=cy();let type=col?.type||'texte';
    if(type==='calcul'){const sel=[...m.querySelectorAll('[name=ref]:checked')].map(x=>x.value);o.refs=[...order.filter(x=>sel.includes(x)),...sel.filter(x=>!order.includes(x))]}
    if(!col){s.cols.push(t);s.fold=false}save();close();render()};
   if(col){const mv=d=>{const i=s.cols.indexOf(col),j=i+d;if(j<0||j>=s.cols.length)return;[s.cols[i],s.cols[j]]=[s.cols[j],s.cols[i]];save();render()};
+   const bb=m.querySelector('#bar');if(bb)bb.onclick=()=>barModal(s,col);
    m.querySelector('#mvl').onclick=()=>mv(-1);m.querySelector('#mvr').onclick=()=>mv(1);
    confirmBtn(m.querySelector('#del'),()=>{s.cols=s.cols.filter(x=>x!==col);Object.values(c.vals||{}).forEach(r=>delete r[col.id]);save();close();render()})}})};
  draw()}
@@ -645,6 +689,17 @@ function lignes(eid,classe){const K=S.classes[classe];if(!K)return[];const out=[
 /* ───── Sauvegarde du carnet : carnet SuiviProf + données CompEval (grilles et évaluations) dans un seul .json ───── */
 const BAK_LS='SuiviProfEPS_derniere_sauvegarde';
 function ceRead(){try{return JSON.parse(localStorage.getItem(CE_KEY))||null}catch(e){return null}}
+/* Grilles CompEval : la copie gardée dans chaque colonne « Grille CompEval » suit les modifications faites dans CompEval
+   (barème, niveaux, compétences, intitulés). Les notes, calculées à partir de cette copie, sont donc recalculées.
+   Lancé à l'ouverture et dès que CompEval enregistre une grille dans un autre onglet. */
+function ceSyncGrids(){const j=ceRead();if(!j||!Array.isArray(j.grids))return 0;const M=new Map(j.grids.map(g=>[g.id,g]));let n=0;
+ for(const K of Object.values(S.classes||{}))for(const c of K.cycles||[])for(const se of c.seances||[])for(const col of se.cols||[]){
+  if(col.type!=='grille'||!col.o||!col.o.gid||!M.has(col.o.gid))continue;
+  const ng=gClean(M.get(col.o.gid));if(!gOk(ng)||JSON.stringify(ng)===JSON.stringify(gClean(col.o.g||{})))continue;
+  if(col.o.g&&col.nom===col.o.g.nom)col.nom=ng.nom;col.o.g=ng;n++;
+  for(const r of Object.values(c.vals||{})){const v=r[col.id];if(v&&Array.isArray(v.c))v.c=v.c.slice(0,ng.items.length).map(x=>x!=null&&x>=0&&x<ng.niveaux.length?x:null)}}
+ if(n)save();return n}
+window.addEventListener('storage',ev=>{if(ev.key===CE_KEY&&ceSyncGrids())render()});
 function bakAge(){const t=+localStorage.getItem(BAK_LS)||0;return t?Math.floor((Date.now()-t)/864e5):null}
 function bakBadge(){const b=$('#bBak');if(!b)return;const a=bakAge(),has=Object.values(S.classes||{}).some(k=>k.cycles&&k.cycles.length);b.classList.toggle('warn',has&&(a===null||a>=7));
  b.title='Sauvegarder le carnet (cycles, séances, saisies et grilles CompEval) dans un fichier .json'+(a===null?' — jamais sauvegardé sur cet appareil':a===0?' — dernière sauvegarde : aujourd’hui':' — dernière sauvegarde il y a '+a+' jour(s)')}
@@ -855,7 +910,7 @@ $('#fList').onchange=async e=>{const fs=[...e.target.files];e.target.value='';if
 $('#fJson').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());const msg=restaurerCarnet(j);close();render();$('#st').style.color='var(--ok)';$('#st').textContent='✅ Carnet restauré.'+msg}catch(x){const m=$('#sm')||$('#st');if(m)m.textContent='❌ '+x.message}};
 
 $('#apsaL').innerHTML=Object.keys(APSA).map(a=>`<option value="${esc(a)}">`).join('');
-(async()=>{try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}try{E=await EPS.all()}catch(x){E=[]}S.view='';render();bakBadge()})();
+(async()=>{try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}try{E=await EPS.all()}catch(x){E=[]}S.view='';ceSyncGrids();render();bakBadge()})();
 if('serviceWorker'in navigator&&/github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
